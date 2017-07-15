@@ -1,0 +1,7 @@
+*.pyc
+dist/
+build/
+venv/
+*.egg-info
+*.egg
+constants.json
