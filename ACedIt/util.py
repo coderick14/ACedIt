@@ -40,14 +40,7 @@ def parse_flags():
             default_site = data.get("default_site", None)
         except:
             pass
-        if default_site is None:
-            print "Specify a default site (Press ENTER to ignore) :",
-            default_site = raw_input()
-            if default_site == "":
-                sys.exit(0)
-            data = {"default_site": default_site.strip()}
-            with open("constants.json", "w") as f:
-                f.write(json.dumps(data))
+
         flags["site"] = default_site
     else:
         flags["site"] = args.site
@@ -55,11 +48,15 @@ def parse_flags():
     flags["contest"] = args.contest
     flags["problem"] = args.problem
 
+    flags["site"] = flags["site"].lower()
+
     return flags
 
 def scrape_problem(args):
 
 	def codeforces():
+		print "Fetching problem " + args["contest"] + "-" + args["problem"] + " from Codeforces..."
+
 		url = "http://codeforces.com/contest/" + args["contest"] + "/problem/" + args["problem"]
 		r = rq.get(url)
 		soup = bs(r.text, "html.parser")
@@ -85,6 +82,8 @@ def scrape_problem(args):
 		print "Outputs", formatted_outputs
 
 	def codechef():
+		print "Fetching problem " + args["contest"] + "-" + args["problem"] + " from Codechef..."
+
 		url = "https://codechef.com/api/contests/" + args["contest"] + "/problems/" + args["problem"]
 		r = rq.get(url)
 		data = json.loads(r.text)
@@ -100,6 +99,39 @@ def scrape_problem(args):
 
 		output_list = [
 			"<pre>(.|\n)+<b>Output:?</b>:?",
+			"</pre>"
+		]
+
+		input_regex = re.compile("(%s)" % "|".join(input_list))
+		output_regex = re.compile("(%s)" % "|".join(output_list))
+
+		for case in test_cases:
+			inp = input_regex.sub("", str(case))
+			out = output_regex.sub("", str(case))
+
+			formatted_inputs += [inp.strip()]
+			formatted_outputs += [out.strip()]
+
+		print "Inputs", formatted_inputs
+		print "Outputs", formatted_outputs
+
+	def spoj():
+		print "Fetching problem " + args["problem"] + " from SPOJ..."
+
+		url = "http://spoj.com/problems/" + args["problem"]
+		r = rq.get(url)
+		soup = bs(r.text, "html.parser")
+
+		test_cases = soup.findAll("pre")
+		formatted_inputs, formatted_outputs = [], []
+
+		input_list = [
+			"<pre>(.|\n|\r)*<b>Input:?</b>:?",
+			"<b>Output:?</b>(.|\n|\r)*"
+		]
+
+		output_list = [
+			"<pre>(.|\n|\r)*<b>Output:?</b>:?",
 			"</pre>"
 		]
 
