@@ -148,4 +148,49 @@ def scrape_problem(args):
 		print "Inputs", formatted_inputs
 		print "Outputs", formatted_outputs
 
+	def hackerrank():
+		print "Fetching problem " + args["contest"] + "-" + args["problem"] + " from Hackerrank..."
+
+		args["problem"] = "-".join(args["problem"].split()).lower()
+		url = "https://www.hackerrank.com/rest/contests/" + args["contest"] + "/challenges/" + args["problem"]
+		r = rq.get(url)
+		data = json.loads(r.text)
+		soup = bs(data["model"]["body_html"], "html.parser")
+
+		input_divs = soup.findAll("div", {"class" : "challenge_sample_input"})
+		output_divs = soup.findAll("div", {"class" : "challenge_sample_output"})
+
+		inputs = [input_div.find("pre") for input_div in input_divs]
+		outputs = [output_div.find("pre") for output_div in output_divs]
+
+		regex_list = [
+			"<pre>(<code>)?",
+			"(</code>)?</pre>"
+		]
+
+		regex = re.compile("(%s)" % "|".join(regex_list))
+
+		formatted_inputs, formatted_outputs = [], []
+
+		for inp in inputs:
+			spans = inp.findAll("span")
+			if len(spans) > 0:
+				formatted_input = "\n".join([span.decode_contents() for span in spans])
+			else:
+				formatted_input = regex.sub("", str(inp))
+
+			formatted_inputs += [formatted_input.strip()]
+
+		for out in outputs:
+			spans = out.findAll("span")
+			if len(spans) > 0:
+				formatted_output = "\n".join([span.decode_contents() for span in spans])
+			else:
+				formatted_output = regex.sub("", str(out))
+
+			formatted_outputs += [formatted_output.strip()]
+
+		print "Inputs", formatted_inputs
+		print "Outputs", formatted_outputs
+
 	eval(args["site"] + "()")
