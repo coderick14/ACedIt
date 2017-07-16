@@ -3,7 +3,7 @@ try:
 except ImportError:
 	from distutils.core import setup
 
-import sys
+import sys, json, os
 
 with open("requirements.txt", "r") as f:
 	requirements = [line.strip() for line in f.readlines()]
@@ -11,6 +11,28 @@ with open("requirements.txt", "r") as f:
 extra = {}
 if sys.version_info >= (3,):
 	extra["use_2to3"] = True
+
+print "Please specify a default site (codeforces) :",
+default_site = raw_input()
+if default_site == "":
+	print "Setting codeforces as default site"
+	default_site = "codeforces"
+
+print "Please specify working directory (relative to home directory) :",
+workdir = raw_input()
+if workdir == "":
+	workdir = "ACedIt"
+workdir = os.path.join(os.path.expanduser("~"), workdir)
+
+if not os.path.isdir(workdir):
+	os.makedirs(workdir)
+
+print "Setting " + workdir + " as working directory"
+
+
+data = {"default_site": default_site.strip(), "workdir" : workdir}
+with open("constants.json", "w") as f:
+    f.write(json.dumps(data))
 
 setup(
 	name = "ACedIt",
