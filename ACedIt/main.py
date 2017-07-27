@@ -12,18 +12,20 @@ def validate_args(args):
     if not args["site"] == "spoj" and args["contest"] is None:
         print "Please specify a contest code"
         sys.exit(0)
+    if args["site"] == "spoj" and args["problem"] is None:
+        print "Please specify a problem code for Spoj"
+        sys.exit(0)
 
 
 def main():
-    args = util.parse_flags()
+    args = util.Utilities.parse_flags()
     validate_args(args)
-
     if args["problem"] is not None:
         # fetch single problem
-        util.scrape_problem(args)
+        util.Utilities.download_problem_testcases(args)
     else:
         # fetch all problems for the contest
-        print "Fetch all"
+        util.Utilities.download_contest_testcases(args)
 
     print args
 

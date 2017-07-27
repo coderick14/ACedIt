@@ -1,7 +1,10 @@
-import sys, json, re
+import sys
+import json
+import re
 try:
     from bs4 import BeautifulSoup as bs
     import requests as rq
+    import grequests as grq
     from argparse import ArgumentParser
 except:
     err = """
@@ -11,186 +14,345 @@ except:
     print err
     sys.exit(0)
 
-def parse_flags():
-    parser = ArgumentParser()
 
-    parser.add_argument("-s", "--site",
-                        dest="site",
-                        help="The competitive programming platform, e.g. codeforces, codechef etc")
+class Utilities:
 
-    parser.add_argument("-c", "--contest",
-                        dest="contest",
-                        help="The name of the contest, e.g. JUNE17, LTIME49, COOK83 etc")
+    @staticmethod
+    def parse_flags():
+        """
+        Utility function to parse command line flags
+        """
 
-    parser.add_argument("-p", "--problem",
-                        dest="problem",
-                        help="The problem code, e.g. OAK, PRMQ etc")
+        parser = ArgumentParser()
 
-    args = parser.parse_args()
+        parser.add_argument("-s", "--site",
+                            dest="site",
+                            help="The competitive programming platform, e.g. codeforces, codechef etc")
 
-    flags = {}
+        parser.add_argument("-c", "--contest",
+                            dest="contest",
+                            help="The name of the contest, e.g. JUNE17, LTIME49, COOK83 etc")
 
-    if args.site is None:
-        import json
-        default_site = None
+        parser.add_argument("-p", "--problem",
+                            dest="problem",
+                            help="The problem code, e.g. OAK, PRMQ etc")
+
+        args = parser.parse_args()
+
+        flags = {}
+
+        if args.site is None:
+            import json
+            default_site = None
+            try:
+                with open("constants.json", "r") as f:
+                    data = f.read()
+                data = json.loads(data)
+                default_site = data.get("default_site", None)
+            except:
+                pass
+
+            flags["site"] = default_site
+        else:
+            flags["site"] = args.site
+
+        flags["contest"] = args.contest
+        flags["problem"] = args.problem
+
+        flags["site"] = flags["site"].lower()
+
+        return flags
+
+    @staticmethod
+    def download_problem_testcases(args):
+        if args["site"] == "codeforces":
+            platform = Codeforces(args)
+        elif args["site"] == "codechef":
+            platform = Codechef(args)
+        elif args["site"] == "spoj":
+            platform = Spoj(args)
+        else:
+            platform = Hackerrank(args)
+
+        platform.scrape_problem()
+
+    @staticmethod
+    def download_contest_testcases(args):
+        if args["site"] == "codeforces":
+            platform = Codeforces(args)
+        elif args["site"] == "codechef":
+            platform = Codechef(args)
+        elif args["site"] == "hackerrank":
+            platform = Hackerrank(args)
+
+        platform.scrape_contest()
+
+    @staticmethod
+    def get_html(url):
+        """
+        Utility function get the html content of an url
+        """
         try:
-            with open("constants.json", "r") as f:
-                data = f.read()
-            data = json.loads(data)
-            default_site = data.get("default_site", None)
-        except:
-            pass
+            r = rq.get(url)
+        except Exception as e:
+            raise e
+        return r
 
-        flags["site"] = default_site
-    else:
-        flags["site"] = args.site
 
-    flags["contest"] = args.contest
-    flags["problem"] = args.problem
+class Codeforces:
+    """
+    Class to handle downloading of test cases from Codeforces
+    """
 
-    flags["site"] = flags["site"].lower()
+    def __init__(self, args):
+        self.site = args["site"]
+        self.contest = args["contest"]
+        self.problem = args["problem"]
 
-    return flags
+    def parse_html(self, req):
+        """
+        Method to parse the html and get test cases
+        from a codeforces problem
+        """
+        soup = bs(req.text, "html.parser")
 
-def scrape_problem(args):
+        inputs = soup.findAll("div", {"class": "input"})
+        outputs = soup.findAll("div", {"class": "output"})
 
-	def codeforces():
-		print "Fetching problem " + args["contest"] + "-" + args["problem"] + " from Codeforces..."
+        repls = ("<br>", "\n"), ("<br/>", "\n"), ("</br>", "")
 
-		url = "http://codeforces.com/contest/" + args["contest"] + "/problem/" + args["problem"]
-		r = rq.get(url)
-		soup = bs(r.text, "html.parser")
+        formatted_inputs, formatted_outputs = [], []
 
-		inputs = soup.findAll("div", {"class" : "input"})
-		outputs = soup.findAll("div", {"class" : "output"})
-		
-		repls = ("<br>","\n"), ("<br/>","\n"), ("</br>","")
+        for inp in inputs:
+            pre = inp.find("pre").decode_contents()
+            pre = reduce(lambda a, kv: a.replace(*kv), repls, pre)
+            formatted_inputs += [pre]
 
-		formatted_inputs, formatted_outputs = [], []
+        for out in outputs:
+            pre = out.find("pre").decode_contents()
+            pre = reduce(lambda a, kv: a.replace(*kv), repls, pre)
+            formatted_outputs += [pre]
 
-		for inp in inputs:
-			pre = inp.find("pre").decode_contents()
-			pre = reduce(lambda a, kv : a.replace(*kv), repls, pre)
-			formatted_inputs += [pre]
+        print "Inputs", formatted_inputs
+        print "Outputs", formatted_outputs
 
-		for out in outputs:
-			pre = out.find("pre").decode_contents()
-			pre = reduce(lambda a, kv : a.replace(*kv), repls, pre)
-			formatted_outputs += [pre]
+    def get_problem_links(self, req):
+        """
+        Method to get the links for the problems
+        in a given codeforces contest
+        """
+        soup = bs(req.text, "html.parser")
 
-		print "Inputs", formatted_inputs
-		print "Outputs", formatted_outputs
+        table = soup.find("table", {"class": "problems"})
+        tds = table.findAll("td", {"class": "id"})
 
-	def codechef():
-		print "Fetching problem " + args["contest"] + "-" + args["problem"] + " from Codechef..."
+        links = []
 
-		url = "https://codechef.com/api/contests/" + args["contest"] + "/problems/" + args["problem"]
-		r = rq.get(url)
-		data = json.loads(r.text)
-		soup = bs(data["body"], "html.parser")
+        for td in tds:
+            links += ["http://codeforces.com" + td.find("a")["href"]]
 
-		test_cases = soup.findAll("pre")
-		formatted_inputs, formatted_outputs = [], []
+        return links
 
-		input_list = [
-			"<pre>(.|\n)*<b>Input:?</b>:?",
-			"<b>Output:?</b>(.|\n)+</pre>"
-		]
+    def scrape_problem(self):
+        """
+        Method to scrape a single problem from codeforces
+        """
+        print "Fetching problem " + self.contest + "-" + self.problem + " from Codeforces..."
+        url = "http://codeforces.com/contest/" + \
+            self.contest + "/problem/" + self.problem
+        req = Utilities.get_html(url)
+        self.parse_html(req)
 
-		output_list = [
-			"<pre>(.|\n)+<b>Output:?</b>:?",
-			"</pre>"
-		]
+    def scrape_contest(self):
+        """
+        Method to scrape all problems from a given codeforces contest
+        """
+        print "Checking problems available for contest " + self.contest + "..."
+        url = "http://codeforces.com/contest/" + self.contest
+        req = Utilities.get_html(url)
+        links = self.get_problem_links(req)
 
-		input_regex = re.compile("(%s)" % "|".join(input_list))
-		output_regex = re.compile("(%s)" % "|".join(output_list))
+        print "Found problems"
+        print "\n".join(links)
 
-		for case in test_cases:
-			inp = input_regex.sub("", str(case))
-			out = output_regex.sub("", str(case))
+        rs = (grq.get(link) for link in links)
+        responses = grq.map(rs)
 
-			formatted_inputs += [inp.strip()]
-			formatted_outputs += [out.strip()]
+        for response in responses:
+            if response is not None:
+                self.parse_html(response)
 
-		print "Inputs", formatted_inputs
-		print "Outputs", formatted_outputs
 
-	def spoj():
-		print "Fetching problem " + args["problem"] + " from SPOJ..."
+class Codechef:
+    """
+    Class to handle downloading of test cases from Codechef
+    """
 
-		url = "http://spoj.com/problems/" + args["problem"]
-		r = rq.get(url)
-		soup = bs(r.text, "html.parser")
+    def __init__(self, args):
+        self.site = args["site"]
+        self.contest = args["contest"]
+        self.problem = args["problem"]
 
-		test_cases = soup.findAll("pre")
-		formatted_inputs, formatted_outputs = [], []
+    def parse_html(self, req):
+        """
+        Method to parse the html and get test cases
+        from a codechef problem
+        """
+        data = json.loads(req.text)
+        soup = bs(data["body"], "html.parser")
 
-		input_list = [
-			"<pre>(.|\n|\r)*<b>Input:?</b>:?",
-			"<b>Output:?</b>(.|\n|\r)*"
-		]
+        test_cases = soup.findAll("pre")
+        formatted_inputs, formatted_outputs = [], []
 
-		output_list = [
-			"<pre>(.|\n|\r)*<b>Output:?</b>:?",
-			"</pre>"
-		]
+        input_list = [
+            "<pre>(.|\n)*<b>Input:?</b>:?",
+            "<b>Output:?</b>(.|\n)+</pre>"
+        ]
 
-		input_regex = re.compile("(%s)" % "|".join(input_list))
-		output_regex = re.compile("(%s)" % "|".join(output_list))
+        output_list = [
+            "<pre>(.|\n)+<b>Output:?</b>:?",
+            "</pre>"
+        ]
 
-		for case in test_cases:
-			inp = input_regex.sub("", str(case))
-			out = output_regex.sub("", str(case))
+        input_regex = re.compile("(%s)" % "|".join(input_list))
+        output_regex = re.compile("(%s)" % "|".join(output_list))
 
-			formatted_inputs += [inp.strip()]
-			formatted_outputs += [out.strip()]
+        for case in test_cases:
+            inp = input_regex.sub("", str(case))
+            out = output_regex.sub("", str(case))
 
-		print "Inputs", formatted_inputs
-		print "Outputs", formatted_outputs
+            formatted_inputs += [inp.strip()]
+            formatted_outputs += [out.strip()]
 
-	def hackerrank():
-		print "Fetching problem " + args["contest"] + "-" + args["problem"] + " from Hackerrank..."
+        print "Inputs", formatted_inputs
+        print "Outputs", formatted_outputs
 
-		args["problem"] = "-".join(args["problem"].split()).lower()
-		url = "https://www.hackerrank.com/rest/contests/" + args["contest"] + "/challenges/" + args["problem"]
-		r = rq.get(url)
-		data = json.loads(r.text)
-		soup = bs(data["model"]["body_html"], "html.parser")
+    def scrape_problem(self):
+        """
+        Method to scrape a single problem from codechef
+        """
+        print "Fetching problem " + self.contest + "-" + self.problem + " from Codechef..."
+        url = "https://codechef.com/api/contests/" + \
+            self.contest + "/problems/" + self.problem
+        req = Utilities.get_html(url)
+        self.parse_html(req)
 
-		input_divs = soup.findAll("div", {"class" : "challenge_sample_input"})
-		output_divs = soup.findAll("div", {"class" : "challenge_sample_output"})
 
-		inputs = [input_div.find("pre") for input_div in input_divs]
-		outputs = [output_div.find("pre") for output_div in output_divs]
+class Spoj:
+    """
+    Class to handle downloading of test cases from Spoj
+    """
 
-		regex_list = [
-			"<pre>(<code>)?",
-			"(</code>)?</pre>"
-		]
+    def __init__(self, args):
+        self.site = args["site"]
+        self.contest = args["contest"]
+        self.problem = args["problem"]
 
-		regex = re.compile("(%s)" % "|".join(regex_list))
+    def parse_html(self, req):
+        """
+        Method to parse the html and get test cases
+        from a spoj problem
+        """
+        soup = bs(req.text, "html.parser")
 
-		formatted_inputs, formatted_outputs = [], []
+        test_cases = soup.findAll("pre")
+        formatted_inputs, formatted_outputs = [], []
 
-		for inp in inputs:
-			spans = inp.findAll("span")
-			if len(spans) > 0:
-				formatted_input = "\n".join([span.decode_contents() for span in spans])
-			else:
-				formatted_input = regex.sub("", str(inp))
+        input_list = [
+            "<pre>(.|\n|\r)*<b>Input:?</b>:?",
+            "<b>Output:?</b>(.|\n|\r)*"
+        ]
 
-			formatted_inputs += [formatted_input.strip()]
+        output_list = [
+            "<pre>(.|\n|\r)*<b>Output:?</b>:?",
+            "</pre>"
+        ]
 
-		for out in outputs:
-			spans = out.findAll("span")
-			if len(spans) > 0:
-				formatted_output = "\n".join([span.decode_contents() for span in spans])
-			else:
-				formatted_output = regex.sub("", str(out))
+        input_regex = re.compile("(%s)" % "|".join(input_list))
+        output_regex = re.compile("(%s)" % "|".join(output_list))
 
-			formatted_outputs += [formatted_output.strip()]
+        for case in test_cases:
+            inp = input_regex.sub("", str(case))
+            out = output_regex.sub("", str(case))
 
-		print "Inputs", formatted_inputs
-		print "Outputs", formatted_outputs
+            formatted_inputs += [inp.strip()]
+            formatted_outputs += [out.strip()]
 
-	eval(args["site"] + "()")
+        print "Inputs", formatted_inputs
+        print "Outputs", formatted_outputs
+
+    def scrape_problem(self):
+        """
+        Method to scrape a single problem from spoj
+        """
+        print "Fetching problem " + self.problem + " from SPOJ..."
+        url = "http://spoj.com/problems/" + self.problem
+        req = Utilities.get_html(url)
+        self.parse_html(req)
+
+
+class Hackerrank:
+    """
+    Class to handle downloading of test cases from Hackerrank
+    """
+
+    def __init__(self, args):
+        self.site = args["site"]
+        self.contest = args["contest"]
+        self.problem = "-".join(args["problem"].split()).lower()
+
+    def parse_html(self, req):
+        """
+        Method to parse the html and get test cases
+        from a hackerrank problem
+        """
+        data = json.loads(req.text)
+        soup = bs(data["model"]["body_html"], "html.parser")
+
+        input_divs = soup.findAll("div", {"class": "challenge_sample_input"})
+        output_divs = soup.findAll("div", {"class": "challenge_sample_output"})
+
+        inputs = [input_div.find("pre") for input_div in input_divs]
+        outputs = [output_div.find("pre") for output_div in output_divs]
+
+        regex_list = [
+            "<pre>(<code>)?",
+            "(</code>)?</pre>"
+        ]
+
+        regex = re.compile("(%s)" % "|".join(regex_list))
+
+        formatted_inputs, formatted_outputs = [], []
+
+        for inp in inputs:
+            spans = inp.findAll("span")
+            if len(spans) > 0:
+                formatted_input = "\n".join(
+                    [span.decode_contents() for span in spans])
+            else:
+                formatted_input = regex.sub("", str(inp))
+
+            formatted_inputs += [formatted_input.strip()]
+
+        for out in outputs:
+            spans = out.findAll("span")
+            if len(spans) > 0:
+                formatted_output = "\n".join(
+                    [span.decode_contents() for span in spans])
+            else:
+                formatted_output = regex.sub("", str(out))
+
+            formatted_outputs += [formatted_output.strip()]
+
+        print "Inputs", formatted_inputs
+        print "Outputs", formatted_outputs
+
+    def scrape_problem(self):
+        """
+        Method to scrape a single problem from hackerrank
+        """
+        print "Fetching problem " + self.contest + "-" + self.problem + " from Hackerrank..."
+        url = "https://www.hackerrank.com/rest/contests/" + \
+            self.contest + "/challenges/" + self.problem
+        req = Utilities.get_html(url)
+        self.parse_html(req)
