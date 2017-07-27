@@ -53,6 +53,8 @@ setup(
 		"console_scripts" : ["ACedIt=ACedIt.main:main"]
 	},
 
+	zip_safe = False,
+
 	url = "https://github.com/coderick14/ACedIt",
 
 	keywords = ["sample test cases", "downloader", "competitive programming"],
