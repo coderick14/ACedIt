@@ -144,12 +144,8 @@ class Codeforces:
         soup = bs(req.text, "html.parser")
 
         table = soup.find("table", {"class": "problems"})
-        tds = table.findAll("td", {"class": "id"})
-
-        links = []
-
-        for td in tds:
-            links += ["http://codeforces.com" + td.find("a")["href"]]
+        links = ["http://codeforces.com" +
+                 td.find("a")["href"] for td in table.findAll("td", {"class": "id"})]
 
         return links
 
@@ -227,6 +223,21 @@ class Codechef:
         print "Inputs", formatted_inputs
         print "Outputs", formatted_outputs
 
+    def get_problem_links(self, req):
+        """
+        Method to get the links for the problems
+        in a given codechef contest
+        """
+        soup = bs(req.text, "html.parser")
+
+        table = soup.find("table", {"class": "dataTable"})
+        links = [div.find("a")["href"]
+                 for div in table.findAll("div", {"class": "problemname"})]
+        links = ["https://codechef.com/api/contests/" + self.contest +
+                 "/problems/" + link.split("/")[-1] for link in links]
+
+        return links
+
     def scrape_problem(self):
         """
         Method to scrape a single problem from codechef
@@ -236,6 +247,27 @@ class Codechef:
             self.contest + "/problems/" + self.problem
         req = Utilities.get_html(url)
         self.parse_html(req)
+
+    def scrape_contest(self):
+        """
+        Method to scrape all problems from a given codechef contest
+        """
+        print "Checking problems available for contest " + self.contest + "..."
+        url = "https://codechef.com/" + self.contest
+        req = Utilities.get_html(url)
+        links = self.get_problem_links(req)
+
+        print "Found problems"
+        print "\n".join(links)
+
+        rs = (grq.get(link) for link in links)
+        responses = grq.map(rs)
+
+        print responses
+
+        for response in responses:
+            if response is not None:
+                self.parse_html(response)
 
 
 class Spoj:
