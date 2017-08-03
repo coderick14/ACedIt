@@ -17,6 +17,8 @@ except:
 
 class Utilities:
 
+    cache_dir = os.path.join(os.path.expanduser("~"), ".cache", "ACedIt")
+
     @staticmethod
     def parse_flags():
         """
@@ -110,6 +112,11 @@ class Codeforces:
         self.contest = args["contest"]
         self.problem = args["problem"]
 
+    def check_cache(self):
+        if self.problem is None:
+            return os.path.isdir(os.path.join(Utilities.cache_dir, self.contest))
+        return os.path.exists(os.path.join(Utilities.cache_dir, self.contest, self.problem))
+
     def parse_html(self, req):
         """
         Method to parse the html and get test cases
@@ -191,6 +198,11 @@ class Codechef:
         self.site = args["site"]
         self.contest = args["contest"]
         self.problem = args["problem"]
+
+    def check_cache(self):
+        if self.problem is None:
+            return os.path.isdir(os.path.join(Utilities.cache_dir, self.contest))
+        return os.path.exists(os.path.join(Utilities.cache_dir, self.contest, self.problem))
 
     def parse_html(self, req):
         """
@@ -288,6 +300,11 @@ class Spoj:
         self.contest = args["contest"]
         self.problem = args["problem"]
 
+    def check_cache(self):
+        if self.problem is None:
+            return os.path.isdir(os.path.join(Utilities.cache_dir, self.contest))
+        return os.path.exists(os.path.join(Utilities.cache_dir, self.contest, self.problem))
+
     def parse_html(self, req):
         """
         Method to parse the html and get test cases
@@ -343,6 +360,11 @@ class Hackerrank:
         self.site = args["site"]
         self.contest = args["contest"]
         self.problem = "-".join(args["problem"].split()).lower()
+
+    def check_cache(self):
+        if self.problem is None:
+            return os.path.isdir(os.path.join(Utilities.cache_dir, self.contest))
+        return os.path.exists(os.path.join(Utilities.cache_dir, self.contest, self.problem))
 
     def parse_html(self, req):
         """

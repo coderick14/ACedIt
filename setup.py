@@ -24,13 +24,23 @@ if workdir == "":
 	workdir = "ACedIt"
 workdir = os.path.join(os.path.expanduser("~"), workdir)
 
+from ACedIt.main import supported_sites
+
 if not os.path.isdir(workdir):
 	os.makedirs(workdir)
+	for site in supported_sites:
+		os.makedirs(os.path.join(workdir,site))
+
+cache_dir = os.path.join(os.path.expanduser("~"), ".cache", "ACedIt")
+if not os.path.isdir(cache_dir):
+	os.makedirs(cache_dir)
+	for site in supported_sites:
+		os.makedirs(os.path.join(cache_dir,site))
 
 print "Setting " + workdir + " as working directory"
 
 
-data = {"default_site": default_site.strip(), "workdir" : workdir}
+data = {"default_site": default_site.strip(), "workdir" : workdir, "cachedir" : cache_dir}
 with open("constants.json", "w") as f:
     f.write(json.dumps(data))
 
