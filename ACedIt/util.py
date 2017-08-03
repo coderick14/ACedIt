@@ -1,6 +1,7 @@
 import sys
 import json
 import re
+import os
 try:
     from bs4 import BeautifulSoup as bs
     import requests as rq
@@ -39,6 +40,13 @@ class Utilities:
                             dest="problem",
                             help="The problem code, e.g. OAK, PRMQ etc")
 
+        parser.add_argument("-f", "--force",
+                            dest="force",
+                            action="store_true",
+                            help="Force download the test cases, even if they are cached")
+
+        parser.set_defaults(force=False)
+
         args = parser.parse_args()
 
         flags = {}
@@ -60,10 +68,43 @@ class Utilities:
 
         flags["contest"] = args.contest
         flags["problem"] = args.problem
-
+        flags["force"] = args.force
         flags["site"] = flags["site"].lower()
 
         return flags
+
+    @staticmethod
+    def check_cache(site, contest, problem):
+        """
+        Method to check if the test cases already exist in cache
+        If not, create the directory structure to store test cases
+        """
+        if problem is None:
+            return False
+
+        if os.path.isdir(os.path.join(Utilities.cache_dir, site, contest, problem)):
+            return True
+        else:
+            os.makedirs(os.path.join(Utilities.cache_dir, site,
+                                     contest, problem))
+            return False
+
+    @staticmethod
+    def store_files(site, contest, problem, inputs, outputs):
+        """
+        Method to store the test cases in files
+        """
+        for i, inp in enumerate(inputs):
+            filename = os.path.join(
+                Utilities.cache_dir, site, contest, problem, "Input" + str(i))
+            with open(filename, "w") as handler:
+                handler.write(inp)
+
+        for i, out in enumerate(outputs):
+            filename = os.path.join(
+                Utilities.cache_dir, site, contest, problem, "Output" + str(i))
+            with open(filename, "w") as handler:
+                handler.write(out)
 
     @staticmethod
     def download_problem_testcases(args):
@@ -75,6 +116,12 @@ class Utilities:
             platform = Spoj(args)
         else:
             platform = Hackerrank(args)
+
+        is_in_cache = Utilities.check_cache(platform.site, platform.contest, platform.problem)
+
+        if not args['force'] and is_in_cache:
+            print "Test cases found in cache..."
+            sys.exit(0)
 
         platform.scrape_problem()
 
@@ -112,10 +159,6 @@ class Codeforces:
         self.contest = args["contest"]
         self.problem = args["problem"]
 
-    def check_cache(self):
-        if self.problem is None:
-            return os.path.isdir(os.path.join(Utilities.cache_dir, self.contest))
-        return os.path.exists(os.path.join(Utilities.cache_dir, self.contest, self.problem))
 
     def parse_html(self, req):
         """
@@ -146,6 +189,8 @@ class Codeforces:
         print "Inputs", formatted_inputs
         print "Outputs", formatted_outputs
 
+        return formatted_inputs, formatted_outputs
+
     def get_problem_links(self, req):
         """
         Method to get the links for the problems
@@ -167,7 +212,8 @@ class Codeforces:
         url = "http://codeforces.com/contest/" + \
             self.contest + "/problem/" + self.problem
         req = Utilities.get_html(url)
-        self.parse_html(req)
+        inputs, outputs = self.parse_html(req)
+        Utilities.store_files(self.site, self.contest, self.problem, inputs, outputs)
 
     def scrape_contest(self):
         """
@@ -185,8 +231,8 @@ class Codeforces:
         responses = grq.map(rs)
 
         for response in responses:
-            if response is not None:
-                self.parse_html(response)
+            if response is not None and response.status_code == 200:
+                inputs, outputs = self.parse_html(response)
 
 
 class Codechef:
@@ -199,10 +245,6 @@ class Codechef:
         self.contest = args["contest"]
         self.problem = args["problem"]
 
-    def check_cache(self):
-        if self.problem is None:
-            return os.path.isdir(os.path.join(Utilities.cache_dir, self.contest))
-        return os.path.exists(os.path.join(Utilities.cache_dir, self.contest, self.problem))
 
     def parse_html(self, req):
         """
@@ -241,6 +283,8 @@ class Codechef:
         print "Inputs", formatted_inputs
         print "Outputs", formatted_outputs
 
+        return formatted_inputs, formatted_outputs
+
     def get_problem_links(self, req):
         """
         Method to get the links for the problems
@@ -264,7 +308,8 @@ class Codechef:
         url = "https://codechef.com/api/contests/" + \
             self.contest + "/problems/" + self.problem
         req = Utilities.get_html(url)
-        self.parse_html(req)
+        inputs, outputs = self.parse_html(req)
+        Utilities.store_files(self.site, self.contest, self.problem, inputs, outputs)
 
     def scrape_contest(self):
         """
@@ -285,9 +330,7 @@ class Codechef:
 
         for response in responses:
             if response is not None and response.status_code == 200:
-                self.parse_html(response)
-
-
+                inputs, outputs = self.parse_html(response)
 
 
 class Spoj:
@@ -300,10 +343,6 @@ class Spoj:
         self.contest = args["contest"]
         self.problem = args["problem"]
 
-    def check_cache(self):
-        if self.problem is None:
-            return os.path.isdir(os.path.join(Utilities.cache_dir, self.contest))
-        return os.path.exists(os.path.join(Utilities.cache_dir, self.contest, self.problem))
 
     def parse_html(self, req):
         """
@@ -341,6 +380,8 @@ class Spoj:
         print "Inputs", formatted_inputs
         print "Outputs", formatted_outputs
 
+        return formatted_inputs, formatted_outputs
+
     def scrape_problem(self):
         """
         Method to scrape a single problem from spoj
@@ -348,7 +389,8 @@ class Spoj:
         print "Fetching problem " + self.problem + " from SPOJ..."
         url = "http://spoj.com/problems/" + self.problem
         req = Utilities.get_html(url)
-        self.parse_html(req)
+        inputs, outputs = self.parse_html(req)
+        Utilities.store_files(self.site, self.contest, self.problem, inputs, outputs)
 
 
 class Hackerrank:
@@ -361,10 +403,6 @@ class Hackerrank:
         self.contest = args["contest"]
         self.problem = "-".join(args["problem"].split()).lower()
 
-    def check_cache(self):
-        if self.problem is None:
-            return os.path.isdir(os.path.join(Utilities.cache_dir, self.contest))
-        return os.path.exists(os.path.join(Utilities.cache_dir, self.contest, self.problem))
 
     def parse_html(self, req):
         """
@@ -412,6 +450,8 @@ class Hackerrank:
         print "Inputs", formatted_inputs
         print "Outputs", formatted_outputs
 
+        return formatted_inputs, formatted_outputs
+
     def scrape_problem(self):
         """
         Method to scrape a single problem from hackerrank
@@ -420,4 +460,5 @@ class Hackerrank:
         url = "https://www.hackerrank.com/rest/contests/" + \
             self.contest + "/challenges/" + self.problem
         req = Utilities.get_html(url)
-        self.parse_html(req)
+        inputs, outputs = self.parse_html(req)
+        Utilities.store_files(self.site, self.contest, self.problem, inputs, outputs)
