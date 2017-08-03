@@ -20,12 +20,16 @@ def validate_args(args):
 def main():
     args = util.Utilities.parse_flags()
     validate_args(args)
-    if args["problem"] is not None:
-        # fetch single problem
-        util.Utilities.download_problem_testcases(args)
-    else:
-        # fetch all problems for the contest
-        util.Utilities.download_contest_testcases(args)
+    try:
+        if args["problem"] is not None:
+            # fetch single problem
+            util.Utilities.download_problem_testcases(args)
+        else:
+            # fetch all problems for the contest
+            util.Utilities.download_contest_testcases(args)
+    except KeyboardInterrupt:
+        # Clean up files here
+        print "Interruped manually. Exiting gracefully."
 
     print args
 

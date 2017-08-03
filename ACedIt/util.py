@@ -95,7 +95,8 @@ class Utilities:
         try:
             r = rq.get(url)
         except Exception as e:
-            raise e
+            print "Please check your internet connection and try again."
+            sys.exit(0)
         return r
 
 
@@ -126,11 +127,13 @@ class Codeforces:
         for inp in inputs:
             pre = inp.find("pre").decode_contents()
             pre = reduce(lambda a, kv: a.replace(*kv), repls, pre)
+            pre = re.sub('<[^<]+?>', '', pre)
             formatted_inputs += [pre]
 
         for out in outputs:
             pre = out.find("pre").decode_contents()
             pre = reduce(lambda a, kv: a.replace(*kv), repls, pre)
+            pre = re.sub('<[^<]+?>', '', pre)
             formatted_outputs += [pre]
 
         print "Inputs", formatted_inputs
@@ -217,6 +220,9 @@ class Codechef:
             inp = input_regex.sub("", str(case))
             out = output_regex.sub("", str(case))
 
+            inp = re.sub('<[^<]+?>', '', inp)
+            out = re.sub('<[^<]+?>', '', out)
+
             formatted_inputs += [inp.strip()]
             formatted_outputs += [out.strip()]
 
@@ -266,8 +272,10 @@ class Codechef:
         print responses
 
         for response in responses:
-            if response is not None:
+            if response is not None and response.status_code == 200:
                 self.parse_html(response)
+
+
 
 
 class Spoj:
@@ -306,6 +314,9 @@ class Spoj:
         for case in test_cases:
             inp = input_regex.sub("", str(case))
             out = output_regex.sub("", str(case))
+
+            inp = re.sub('<[^<]+?>', '', inp)
+            out = re.sub('<[^<]+?>', '', out)
 
             formatted_inputs += [inp.strip()]
             formatted_outputs += [out.strip()]
