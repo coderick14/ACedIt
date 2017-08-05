@@ -80,6 +80,9 @@ class Utilities:
         If not, create the directory structure to store test cases
         """
         if problem is None:
+            if not os.path.isdir(os.path.join(Utilities.cache_dir, site, contest)):
+                os.makedirs(os.path.join(Utilities.cache_dir, site,
+                                         contest))
             return False
 
         if os.path.isdir(os.path.join(Utilities.cache_dir, site, contest, problem)):
@@ -117,7 +120,8 @@ class Utilities:
         else:
             platform = Hackerrank(args)
 
-        is_in_cache = Utilities.check_cache(platform.site, platform.contest, platform.problem)
+        is_in_cache = Utilities.check_cache(
+            platform.site, platform.contest, platform.problem)
 
         if not args['force'] and is_in_cache:
             print "Test cases found in cache..."
@@ -133,6 +137,9 @@ class Utilities:
             platform = Codechef(args)
         elif args["site"] == "hackerrank":
             platform = Hackerrank(args)
+
+        Utilities.check_cache(
+            platform.site, platform.contest, platform.problem)
 
         platform.scrape_contest()
 
@@ -158,7 +165,7 @@ class Codeforces:
         self.site = args["site"]
         self.contest = args["contest"]
         self.problem = args["problem"]
-
+        self.force_download = args["force"]
 
     def parse_html(self, req):
         """
@@ -213,7 +220,8 @@ class Codeforces:
             self.contest + "/problem/" + self.problem
         req = Utilities.get_html(url)
         inputs, outputs = self.parse_html(req)
-        Utilities.store_files(self.site, self.contest, self.problem, inputs, outputs)
+        Utilities.store_files(self.site, self.contest,
+                              self.problem, inputs, outputs)
 
     def scrape_contest(self):
         """
@@ -227,12 +235,22 @@ class Codeforces:
         print "Found problems"
         print "\n".join(links)
 
+        if not self.force_download:
+            cached_problems = os.listdir(os.path.join(
+                Utilities.cache_dir, self.site, self.contest))
+            links = [link for link in links if link.split(
+                "/")[-1] not in cached_problems]
+
         rs = (grq.get(link) for link in links)
         responses = grq.map(rs)
 
         for response in responses:
             if response is not None and response.status_code == 200:
                 inputs, outputs = self.parse_html(response)
+                self.problem = response.url.split("/")[-1]
+                Utilities.check_cache(self.site, self.contest, self.problem)
+                Utilities.store_files(
+                    self.site, self.contest, self.problem, inputs, outputs)
 
 
 class Codechef:
@@ -244,7 +262,7 @@ class Codechef:
         self.site = args["site"]
         self.contest = args["contest"]
         self.problem = args["problem"]
-
+        self.force_download = args["force"]
 
     def parse_html(self, req):
         """
@@ -309,7 +327,8 @@ class Codechef:
             self.contest + "/problems/" + self.problem
         req = Utilities.get_html(url)
         inputs, outputs = self.parse_html(req)
-        Utilities.store_files(self.site, self.contest, self.problem, inputs, outputs)
+        Utilities.store_files(self.site, self.contest,
+                              self.problem, inputs, outputs)
 
     def scrape_contest(self):
         """
@@ -323,6 +342,12 @@ class Codechef:
         print "Found problems"
         print "\n".join(links)
 
+        if not self.force_download:
+            cached_problems = os.listdir(os.path.join(
+                Utilities.cache_dir, self.site, self.contest))
+            links = [link for link in links if link.split(
+                "/")[-1] not in cached_problems]
+
         rs = (grq.get(link) for link in links)
         responses = grq.map(rs)
 
@@ -331,6 +356,10 @@ class Codechef:
         for response in responses:
             if response is not None and response.status_code == 200:
                 inputs, outputs = self.parse_html(response)
+                self.problem = response.url.split("/")[-1]
+                Utilities.check_cache(self.site, self.contest, self.problem)
+                Utilities.store_files(
+                    self.site, self.contest, self.problem, inputs, outputs)
 
 
 class Spoj:
@@ -342,7 +371,7 @@ class Spoj:
         self.site = args["site"]
         self.contest = args["contest"]
         self.problem = args["problem"]
-
+        self.force_download = args["force"]
 
     def parse_html(self, req):
         """
@@ -390,7 +419,8 @@ class Spoj:
         url = "http://spoj.com/problems/" + self.problem
         req = Utilities.get_html(url)
         inputs, outputs = self.parse_html(req)
-        Utilities.store_files(self.site, self.contest, self.problem, inputs, outputs)
+        Utilities.store_files(self.site, self.contest,
+                              self.problem, inputs, outputs)
 
 
 class Hackerrank:
@@ -402,7 +432,7 @@ class Hackerrank:
         self.site = args["site"]
         self.contest = args["contest"]
         self.problem = "-".join(args["problem"].split()).lower()
-
+        self.force_download = args["force"]
 
     def parse_html(self, req):
         """
@@ -461,4 +491,5 @@ class Hackerrank:
             self.contest + "/challenges/" + self.problem
         req = Utilities.get_html(url)
         inputs, outputs = self.parse_html(req)
-        Utilities.store_files(self.site, self.contest, self.problem, inputs, outputs)
+        Utilities.store_files(self.site, self.contest,
+                              self.problem, inputs, outputs)
