@@ -1,6 +1,6 @@
 import sys
 import util
-
+import submission as sub
 
 supported_sites = ["codeforces", "codechef", "hackerrank", "spoj"]
 
@@ -27,6 +27,11 @@ def main():
         else:
             # fetch all problems for the contest
             util.Utilities.download_contest_testcases(args)
+
+        if args["submission"] is not None:
+            # fetch submission
+            sub.Utilities.download_submission(args)
+
     except KeyboardInterrupt:
         # Clean up files here
         print "Interruped manually. Exiting gracefully."
