@@ -45,6 +45,18 @@ class Utilities:
                             action="store_true",
                             help="Force download the test cases, even if they are cached")
 
+        parser.add_argument("-sub","--submission",
+                            dest="submission",
+                            help="The number of AC'd submissions")
+
+        parser.add_argument("-status",
+                            dest="status",
+                            help="The submission status, e.g. AC, WA etc")
+
+        parser.add_argument("-u","--username",
+                            dest="username",
+                            help="The username, e.g. rng_58, rajat1603 etc")
+
         parser.set_defaults(force=False)
 
         args = parser.parse_args()
@@ -70,6 +82,9 @@ class Utilities:
         flags["problem"] = args.problem
         flags["force"] = args.force
         flags["site"] = flags["site"].lower()
+        flags["submission"] = args.submission
+        flags["status"] = args.status
+        flags["username"] = args.username
 
         return flags
 
