@@ -19,6 +19,13 @@ except:
 class Utilities:
 
     cache_dir = os.path.join(os.path.expanduser("~"), ".cache", "ACedIt")
+    colors = {
+        'GREEN': '\033[92m',
+        'YELLOW': '\033[93m',
+        'RED': '\033[91m',
+        'ENDC': '\033[0m',
+        'BOLD': '\033[1m',
+    }
 
     @staticmethod
     def parse_flags():
@@ -45,6 +52,10 @@ class Utilities:
                             action="store_true",
                             help="Force download the test cases, even if they are cached")
 
+        parser.add_argument("--run",
+                            dest="source_file",
+                            help="Name of source file to be run")
+
         parser.set_defaults(force=False)
 
         args = parser.parse_args()
@@ -55,7 +66,7 @@ class Utilities:
             import json
             default_site = None
             try:
-                with open("constants.json", "r") as f:
+                with open(os.path.join(Utilities.cache_dir, "constants.json"), "r") as f:
                     data = f.read()
                 data = json.loads(data)
                 default_site = data.get("default_site", None)
@@ -70,6 +81,7 @@ class Utilities:
         flags["problem"] = args.problem
         flags["force"] = args.force
         flags["site"] = flags["site"].lower()
+        flags["source"] = args.source_file
 
         return flags
 
@@ -111,6 +123,9 @@ class Utilities:
 
     @staticmethod
     def download_problem_testcases(args):
+        """
+        Download test cases for a given problem
+        """
         if args["site"] == "codeforces":
             platform = Codeforces(args)
         elif args["site"] == "codechef":
@@ -131,6 +146,9 @@ class Utilities:
 
     @staticmethod
     def download_contest_testcases(args):
+        """
+        Download test cases for all problems in a given contest
+        """
         if args["site"] == "codeforces":
             platform = Codeforces(args)
         elif args["site"] == "codechef":
@@ -142,6 +160,168 @@ class Utilities:
             platform.site, platform.contest, platform.problem)
 
         platform.scrape_contest()
+
+    @staticmethod
+    def input_file_to_string(path, num_cases):
+        """
+        Method to return sample inputs as a list
+        """
+        inputs = []
+
+        for i in xrange(num_cases):
+            with open(os.path.join(path, 'Input' + str(i)), 'r') as fh:
+                inputs += [fh.read()]
+
+        return inputs
+
+    @staticmethod
+    def cleanup(num_cases):
+        """
+        Method to clean up temporarily created files
+        """
+        for i in xrange(num_cases):
+            if os.path.isfile('temp_output' + str(i)):
+                os.remove('temp_output' + str(i))
+
+    @staticmethod
+    def run_solution(problem):
+        """
+        Method to run and test the user's solution against sample cases
+        """
+        extension = problem.split('.')[-1]
+        problem = problem.split('.')[0]
+        problem_path = os.path.join(os.getcwd(), problem)
+
+        if not os.path.isfile(problem_path + '.' + extension):
+            print "ERROR : No such file"
+            sys.exit(0)
+
+        testcases_path = os.path.join(
+            Utilities.cache_dir, *problem_path.split('/')[-3:])
+
+        if os.path.isdir(testcases_path):
+            num_cases = len(os.listdir(testcases_path)) / 2
+            results, expected_outputs, user_outputs = [], [], []
+
+            if extension == 'py':
+
+                for i in xrange(num_cases):
+                    status = os.system('cat ' + os.path.join(testcases_path, 'Input' + str(
+                        i)) + ' | timeout 3s python ' + problem + '.py > temp_output' + str(i))
+                    if status == 124:
+                        # Time Limit Exceeded
+                        results += [Utilities.colors['BOLD'] +
+                                    Utilities.colors['YELLOW'] + 'TLE' + Utilities.colors['ENDC']]
+
+                    elif status == 0:
+
+                        with open('temp_output' + str(i), 'r') as temp_handler, open(os.path.join(testcases_path, 'Output' + str(i)), 'r') as out_handler:
+                            expected_output = out_handler.read().strip()
+                            user_output = temp_handler.read().strip()
+
+                            expected_outputs += [expected_output]
+                            user_outputs += [user_output]
+
+                        if expected_output == user_output:
+                            # All Correct
+                            results += [Utilities.colors['BOLD'] + Utilities.colors[
+                                'GREEN'] + 'AC' + Utilities.colors['ENDC']]
+                        else:
+                            # Wrong Answer
+                            results += [Utilities.colors['BOLD'] +
+                                        Utilities.colors['RED'] + 'WA' + Utilities.colors['ENDC']]
+
+                    else:
+                        # Runtime Error
+                        results += [Utilities.colors['BOLD'] +
+                                    Utilities.colors['RED'] + 'RTE' + Utilities.colors['ENDC']]
+
+            elif extension == 'cpp' or extension == 'c':
+
+                compiler = {'c': 'gcc', 'cpp': 'g++'}[extension]
+                compile_status = os.system(
+                    compiler + ' ' + problem_path + '.cpp')
+
+                if compile_status == 0:
+                    for i in xrange(num_cases):
+                        status = os.system('timeout 2s ./a.out < ' + os.path.join(
+                            testcases_path, 'Input' + str(i)) + ' > temp_output' + str(i))
+                        if status == 124:
+                            # Time Limit Exceeded
+                            results += [Utilities.colors['BOLD'] + Utilities.colors[
+                                'YELLOW'] + 'TLE' + Utilities.colors['ENDC']]
+
+                        elif status == 0:
+
+                            with open('temp_output' + str(i), 'r') as temp_handler, open(os.path.join(testcases_path, 'Output' + str(i)), 'r') as out_handler:
+                                expected_output = out_handler.read().strip()
+                                user_output = temp_handler.read().strip()
+
+                                expected_outputs += [expected_output]
+                                user_outputs += [user_output]
+
+                            if expected_output == user_output:
+                                # All Correct
+                                results += [Utilities.colors['BOLD'] + Utilities.colors[
+                                    'GREEN'] + 'AC' + Utilities.colors['ENDC']]
+                            else:
+                                # Wrong Answer
+                                results += [Utilities.colors['BOLD'] + Utilities.colors[
+                                    'RED'] + 'WA' + Utilities.colors['ENDC']]
+
+                        else:
+                            # Runtime Error
+                            results += [Utilities.colors['BOLD'] +
+                                        Utilities.colors['RED'] + 'RTE' + Utilities.colors['ENDC']]
+                else:
+                    # Compilation error occurred
+                    message = Utilities.colors['BOLD'] + Utilities.colors[
+                        'RED'] + "Compilation error. Not run against test cases" + Utilities.colors['ENDC'] + "."
+                    print message
+                    sys.exit(0)
+
+            else:
+                print "Unsupported language."
+                sys.exit(0)
+
+            from terminaltables import AsciiTable
+            table_data = [['Serial No', 'Input',
+                           'Expected Output', 'Your Output', 'Result']]
+
+            inputs = Utilities.input_file_to_string(testcases_path, num_cases)
+
+            for i in xrange(num_cases):
+
+                row = [
+                    i + 1,
+                    inputs[i],
+                    expected_outputs[i],
+                    user_outputs[i] if any(sub in results[i]
+                                           for sub in ['AC', 'WA']) else 'N/A',
+                    results[i]
+                ]
+
+                table_data.append(row)
+
+            table = AsciiTable(table_data)
+
+            print table.table
+
+        else:
+            print "Test cases not found locally..."
+            args = {
+                'site': testcases_path.split('/')[-3],
+                'contest': testcases_path.split('/')[-2],
+                'problem': testcases_path.split('/')[-1],
+                'force': True
+            }
+            Utilities.download_problem_testcases(args)
+
+            print "Done. Running your solution against sample cases..."
+            Utilities.run_solution(problem)
+
+        # Clean up temporary files
+        Utilities.cleanup(num_cases)
 
     @staticmethod
     def get_html(url):

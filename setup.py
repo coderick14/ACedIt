@@ -41,8 +41,8 @@ print "Setting " + workdir + " as working directory"
 
 
 data = {"default_site": default_site.strip(), "workdir" : workdir, "cachedir" : cache_dir}
-with open("constants.json", "w") as f:
-    f.write(json.dumps(data))
+with open(os.path.join(cache_dir, "constants.json"), "w") as f:
+    f.write(json.dumps(data, indent=2))
 
 setup(
 	name = "ACedIt",
