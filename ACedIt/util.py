@@ -18,7 +18,7 @@ except:
 
 class Utilities:
 
-    cache_dir = os.path.join(os.path.expanduser("~"), ".cache", "ACedIt")
+    cache_dir = os.path.join(os.path.expanduser('~'), '.cache', 'ACedIt')
     colors = {
         'GREEN': '\033[92m',
         'YELLOW': '\033[93m',
@@ -35,26 +35,26 @@ class Utilities:
 
         parser = ArgumentParser()
 
-        parser.add_argument("-s", "--site",
-                            dest="site",
-                            help="The competitive programming platform, e.g. codeforces, codechef etc")
+        parser.add_argument('-s', '--site',
+                            dest='site',
+                            help='The competitive programming platform, e.g. codeforces, codechef etc')
 
-        parser.add_argument("-c", "--contest",
-                            dest="contest",
-                            help="The name of the contest, e.g. JUNE17, LTIME49, COOK83 etc")
+        parser.add_argument('-c', '--contest',
+                            dest='contest',
+                            help='The name of the contest, e.g. JUNE17, LTIME49, COOK83 etc')
 
-        parser.add_argument("-p", "--problem",
-                            dest="problem",
-                            help="The problem code, e.g. OAK, PRMQ etc")
+        parser.add_argument('-p', '--problem',
+                            dest='problem',
+                            help='The problem code, e.g. OAK, PRMQ etc')
 
-        parser.add_argument("-f", "--force",
-                            dest="force",
-                            action="store_true",
-                            help="Force download the test cases, even if they are cached")
+        parser.add_argument('-f', '--force',
+                            dest='force',
+                            action='store_true',
+                            help='Force download the test cases, even if they are cached')
 
-        parser.add_argument("--run",
-                            dest="source_file",
-                            help="Name of source file to be run")
+        parser.add_argument('--run',
+                            dest='source_file',
+                            help='Name of source file to be run')
 
         parser.set_defaults(force=False)
 
@@ -66,22 +66,22 @@ class Utilities:
             import json
             default_site = None
             try:
-                with open(os.path.join(Utilities.cache_dir, "constants.json"), "r") as f:
+                with open(os.path.join(Utilities.cache_dir, 'constants.json'), 'r') as f:
                     data = f.read()
                 data = json.loads(data)
-                default_site = data.get("default_site", None)
+                default_site = data.get('default_site', None)
             except:
                 pass
 
-            flags["site"] = default_site
+            flags['site'] = default_site
         else:
-            flags["site"] = args.site
+            flags['site'] = args.site
 
-        flags["contest"] = args.contest
-        flags["problem"] = args.problem
-        flags["force"] = args.force
-        flags["site"] = flags["site"].lower()
-        flags["source"] = args.source_file
+        flags['contest'] = args.contest
+        flags['problem'] = args.problem
+        flags['force'] = args.force
+        flags['site'] = flags['site'].lower()
+        flags['source'] = args.source_file
 
         return flags
 
@@ -111,14 +111,14 @@ class Utilities:
         """
         for i, inp in enumerate(inputs):
             filename = os.path.join(
-                Utilities.cache_dir, site, contest, problem, "Input" + str(i))
-            with open(filename, "w") as handler:
+                Utilities.cache_dir, site, contest, problem, 'Input' + str(i))
+            with open(filename, 'w') as handler:
                 handler.write(inp)
 
         for i, out in enumerate(outputs):
             filename = os.path.join(
-                Utilities.cache_dir, site, contest, problem, "Output" + str(i))
-            with open(filename, "w") as handler:
+                Utilities.cache_dir, site, contest, problem, 'Output' + str(i))
+            with open(filename, 'w') as handler:
                 handler.write(out)
 
     @staticmethod
@@ -126,11 +126,11 @@ class Utilities:
         """
         Download test cases for a given problem
         """
-        if args["site"] == "codeforces":
+        if args['site'] == 'codeforces':
             platform = Codeforces(args)
-        elif args["site"] == "codechef":
+        elif args['site'] == 'codechef':
             platform = Codechef(args)
-        elif args["site"] == "spoj":
+        elif args['site'] == 'spoj':
             platform = Spoj(args)
         else:
             platform = Hackerrank(args)
@@ -139,7 +139,7 @@ class Utilities:
             platform.site, platform.contest, platform.problem)
 
         if not args['force'] and is_in_cache:
-            print "Test cases found in cache..."
+            print 'Test cases found in cache...'
             sys.exit(0)
 
         platform.scrape_problem()
@@ -149,11 +149,11 @@ class Utilities:
         """
         Download test cases for all problems in a given contest
         """
-        if args["site"] == "codeforces":
+        if args['site'] == 'codeforces':
             platform = Codeforces(args)
-        elif args["site"] == "codechef":
+        elif args['site'] == 'codechef':
             platform = Codechef(args)
-        elif args["site"] == "hackerrank":
+        elif args['site'] == 'hackerrank':
             platform = Hackerrank(args)
 
         Utilities.check_cache(
@@ -193,7 +193,7 @@ class Utilities:
         problem_path = os.path.join(os.getcwd(), problem)
 
         if not os.path.isfile(problem_path + '.' + extension):
-            print "ERROR : No such file"
+            print 'ERROR : No such file'
             sys.exit(0)
 
         testcases_path = os.path.join(
@@ -276,12 +276,12 @@ class Utilities:
                 else:
                     # Compilation error occurred
                     message = Utilities.colors['BOLD'] + Utilities.colors[
-                        'RED'] + "Compilation error. Not run against test cases" + Utilities.colors['ENDC'] + "."
+                        'RED'] + 'Compilation error. Not run against test cases' + Utilities.colors['ENDC'] + '.'
                     print message
                     sys.exit(0)
 
             else:
-                print "Unsupported language."
+                print 'Supports only C++ and Python as of now. Support for Java coming soon.'
                 sys.exit(0)
 
             from terminaltables import AsciiTable
@@ -307,8 +307,11 @@ class Utilities:
 
             print table.table
 
+            # Clean up temporary files
+            Utilities.cleanup(num_cases)
+
         else:
-            print "Test cases not found locally..."
+            print 'Test cases not found locally...'
             args = {
                 'site': testcases_path.split('/')[-3],
                 'contest': testcases_path.split('/')[-2],
@@ -317,11 +320,8 @@ class Utilities:
             }
             Utilities.download_problem_testcases(args)
 
-            print "Done. Running your solution against sample cases..."
+            print 'Done. Running your solution against sample cases...'
             Utilities.run_solution(problem + '.' + extension)
-
-        # Clean up temporary files
-        Utilities.cleanup(num_cases)
 
     @staticmethod
     def get_html(url):
@@ -331,7 +331,7 @@ class Utilities:
         try:
             r = rq.get(url)
         except Exception as e:
-            print "Please check your internet connection and try again."
+            print 'Please check your internet connection and try again.'
             sys.exit(0)
         return r
 
@@ -342,39 +342,39 @@ class Codeforces:
     """
 
     def __init__(self, args):
-        self.site = args["site"]
-        self.contest = args["contest"]
-        self.problem = args["problem"]
-        self.force_download = args["force"]
+        self.site = args['site']
+        self.contest = args['contest']
+        self.problem = args['problem']
+        self.force_download = args['force']
 
     def parse_html(self, req):
         """
         Method to parse the html and get test cases
         from a codeforces problem
         """
-        soup = bs(req.text, "html.parser")
+        soup = bs(req.text, 'html.parser')
 
-        inputs = soup.findAll("div", {"class": "input"})
-        outputs = soup.findAll("div", {"class": "output"})
+        inputs = soup.findAll('div', {'class': 'input'})
+        outputs = soup.findAll('div', {'class': 'output'})
 
-        repls = ("<br>", "\n"), ("<br/>", "\n"), ("</br>", "")
+        repls = ('<br>', '\n'), ('<br/>', '\n'), ('</br>', '')
 
         formatted_inputs, formatted_outputs = [], []
 
         for inp in inputs:
-            pre = inp.find("pre").decode_contents()
+            pre = inp.find('pre').decode_contents()
             pre = reduce(lambda a, kv: a.replace(*kv), repls, pre)
             pre = re.sub('<[^<]+?>', '', pre)
             formatted_inputs += [pre]
 
         for out in outputs:
-            pre = out.find("pre").decode_contents()
+            pre = out.find('pre').decode_contents()
             pre = reduce(lambda a, kv: a.replace(*kv), repls, pre)
             pre = re.sub('<[^<]+?>', '', pre)
             formatted_outputs += [pre]
 
-        print "Inputs", formatted_inputs
-        print "Outputs", formatted_outputs
+        print 'Inputs', formatted_inputs
+        print 'Outputs', formatted_outputs
 
         return formatted_inputs, formatted_outputs
 
@@ -383,11 +383,11 @@ class Codeforces:
         Method to get the links for the problems
         in a given codeforces contest
         """
-        soup = bs(req.text, "html.parser")
+        soup = bs(req.text, 'html.parser')
 
-        table = soup.find("table", {"class": "problems"})
-        links = ["http://codeforces.com" +
-                 td.find("a")["href"] for td in table.findAll("td", {"class": "id"})]
+        table = soup.find('table', {'class': 'problems'})
+        links = ['http://codeforces.com' +
+                 td.find('a')['href'] for td in table.findAll('td', {'class': 'id'})]
 
         return links
 
@@ -395,9 +395,9 @@ class Codeforces:
         """
         Method to scrape a single problem from codeforces
         """
-        print "Fetching problem " + self.contest + "-" + self.problem + " from Codeforces..."
-        url = "http://codeforces.com/contest/" + \
-            self.contest + "/problem/" + self.problem
+        print 'Fetching problem ' + self.contest + '-' + self.problem + ' from Codeforces...'
+        url = 'http://codeforces.com/contest/' + \
+            self.contest + '/problem/' + self.problem
         req = Utilities.get_html(url)
         inputs, outputs = self.parse_html(req)
         Utilities.store_files(self.site, self.contest,
@@ -407,19 +407,19 @@ class Codeforces:
         """
         Method to scrape all problems from a given codeforces contest
         """
-        print "Checking problems available for contest " + self.contest + "..."
-        url = "http://codeforces.com/contest/" + self.contest
+        print 'Checking problems available for contest ' + self.contest + '...'
+        url = 'http://codeforces.com/contest/' + self.contest
         req = Utilities.get_html(url)
         links = self.get_problem_links(req)
 
-        print "Found problems"
-        print "\n".join(links)
+        print 'Found problems'
+        print '\n'.join(links)
 
         if not self.force_download:
             cached_problems = os.listdir(os.path.join(
                 Utilities.cache_dir, self.site, self.contest))
             links = [link for link in links if link.split(
-                "/")[-1] not in cached_problems]
+                '/')[-1] not in cached_problems]
 
         rs = (grq.get(link) for link in links)
         responses = grq.map(rs)
@@ -427,7 +427,7 @@ class Codeforces:
         for response in responses:
             if response is not None and response.status_code == 200:
                 inputs, outputs = self.parse_html(response)
-                self.problem = response.url.split("/")[-1]
+                self.problem = response.url.split('/')[-1]
                 Utilities.check_cache(self.site, self.contest, self.problem)
                 Utilities.store_files(
                     self.site, self.contest, self.problem, inputs, outputs)
@@ -439,10 +439,10 @@ class Codechef:
     """
 
     def __init__(self, args):
-        self.site = args["site"]
-        self.contest = args["contest"]
-        self.problem = args["problem"]
-        self.force_download = args["force"]
+        self.site = args['site']
+        self.contest = args['contest']
+        self.problem = args['problem']
+        self.force_download = args['force']
 
     def parse_html(self, req):
         """
@@ -450,27 +450,27 @@ class Codechef:
         from a codechef problem
         """
         data = json.loads(req.text)
-        soup = bs(data["body"], "html.parser")
+        soup = bs(data['body'], 'html.parser')
 
-        test_cases = soup.findAll("pre")
+        test_cases = soup.findAll('pre')
         formatted_inputs, formatted_outputs = [], []
 
         input_list = [
-            "<pre>(.|\n)*<b>Input:?</b>:?",
-            "<b>Output:?</b>(.|\n)+</pre>"
+            '<pre>(.|\n)*<b>Input:?</b>:?',
+            '<b>Output:?</b>(.|\n)+</pre>'
         ]
 
         output_list = [
-            "<pre>(.|\n)+<b>Output:?</b>:?",
-            "</pre>"
+            '<pre>(.|\n)+<b>Output:?</b>:?',
+            '</pre>'
         ]
 
-        input_regex = re.compile("(%s)" % "|".join(input_list))
-        output_regex = re.compile("(%s)" % "|".join(output_list))
+        input_regex = re.compile('(%s)' % '|'.join(input_list))
+        output_regex = re.compile('(%s)' % '|'.join(output_list))
 
         for case in test_cases:
-            inp = input_regex.sub("", str(case))
-            out = output_regex.sub("", str(case))
+            inp = input_regex.sub('', str(case))
+            out = output_regex.sub('', str(case))
 
             inp = re.sub('<[^<]+?>', '', inp)
             out = re.sub('<[^<]+?>', '', out)
@@ -478,8 +478,8 @@ class Codechef:
             formatted_inputs += [inp.strip()]
             formatted_outputs += [out.strip()]
 
-        print "Inputs", formatted_inputs
-        print "Outputs", formatted_outputs
+        print 'Inputs', formatted_inputs
+        print 'Outputs', formatted_outputs
 
         return formatted_inputs, formatted_outputs
 
@@ -488,13 +488,13 @@ class Codechef:
         Method to get the links for the problems
         in a given codechef contest
         """
-        soup = bs(req.text, "html.parser")
+        soup = bs(req.text, 'html.parser')
 
-        table = soup.find("table", {"class": "dataTable"})
-        links = [div.find("a")["href"]
-                 for div in table.findAll("div", {"class": "problemname"})]
-        links = ["https://codechef.com/api/contests/" + self.contest +
-                 "/problems/" + link.split("/")[-1] for link in links]
+        table = soup.find('table', {'class': 'dataTable'})
+        links = [div.find('a')['href']
+                 for div in table.findAll('div', {'class': 'problemname'})]
+        links = ['https://codechef.com/api/contests/' + self.contest +
+                 '/problems/' + link.split('/')[-1] for link in links]
 
         return links
 
@@ -502,9 +502,9 @@ class Codechef:
         """
         Method to scrape a single problem from codechef
         """
-        print "Fetching problem " + self.contest + "-" + self.problem + " from Codechef..."
-        url = "https://codechef.com/api/contests/" + \
-            self.contest + "/problems/" + self.problem
+        print 'Fetching problem ' + self.contest + '-' + self.problem + ' from Codechef...'
+        url = 'https://codechef.com/api/contests/' + \
+            self.contest + '/problems/' + self.problem
         req = Utilities.get_html(url)
         inputs, outputs = self.parse_html(req)
         Utilities.store_files(self.site, self.contest,
@@ -514,29 +514,31 @@ class Codechef:
         """
         Method to scrape all problems from a given codechef contest
         """
-        print "Checking problems available for contest " + self.contest + "..."
-        url = "https://codechef.com/" + self.contest
+        print 'Checking problems available for contest ' + self.contest + '...'
+        url = 'https://codechef.com/' + self.contest
         req = Utilities.get_html(url)
         links = self.get_problem_links(req)
 
-        print "Found problems"
-        print "\n".join(links)
+        print 'Found problems'
+        print '\n'.join(links)
 
         if not self.force_download:
             cached_problems = os.listdir(os.path.join(
                 Utilities.cache_dir, self.site, self.contest))
             links = [link for link in links if link.split(
-                "/")[-1] not in cached_problems]
+                '/')[-1] not in cached_problems]
 
-        rs = (grq.get(link) for link in links)
-        responses = grq.map(rs)
+        # rs = (grq.get(link) for link in links)
+        # responses = grq.map(rs)
 
-        print responses
+        responses = []
+        for link in links:
+            responses += [rq.get(link)]
 
         for response in responses:
             if response is not None and response.status_code == 200:
                 inputs, outputs = self.parse_html(response)
-                self.problem = response.url.split("/")[-1]
+                self.problem = response.url.split('/')[-1]
                 Utilities.check_cache(self.site, self.contest, self.problem)
                 Utilities.store_files(
                     self.site, self.contest, self.problem, inputs, outputs)
@@ -548,37 +550,37 @@ class Spoj:
     """
 
     def __init__(self, args):
-        self.site = args["site"]
-        self.contest = args["contest"]
-        self.problem = args["problem"]
-        self.force_download = args["force"]
+        self.site = args['site']
+        self.contest = args['contest']
+        self.problem = args['problem']
+        self.force_download = args['force']
 
     def parse_html(self, req):
         """
         Method to parse the html and get test cases
         from a spoj problem
         """
-        soup = bs(req.text, "html.parser")
+        soup = bs(req.text, 'html.parser')
 
-        test_cases = soup.findAll("pre")
+        test_cases = soup.findAll('pre')
         formatted_inputs, formatted_outputs = [], []
 
         input_list = [
-            "<pre>(.|\n|\r)*<b>Input:?</b>:?",
-            "<b>Output:?</b>(.|\n|\r)*"
+            '<pre>(.|\n|\r)*<b>Input:?</b>:?',
+            '<b>Output:?</b>(.|\n|\r)*'
         ]
 
         output_list = [
-            "<pre>(.|\n|\r)*<b>Output:?</b>:?",
-            "</pre>"
+            '<pre>(.|\n|\r)*<b>Output:?</b>:?',
+            '</pre>'
         ]
 
-        input_regex = re.compile("(%s)" % "|".join(input_list))
-        output_regex = re.compile("(%s)" % "|".join(output_list))
+        input_regex = re.compile('(%s)' % '|'.join(input_list))
+        output_regex = re.compile('(%s)' % '|'.join(output_list))
 
         for case in test_cases:
-            inp = input_regex.sub("", str(case))
-            out = output_regex.sub("", str(case))
+            inp = input_regex.sub('', str(case))
+            out = output_regex.sub('', str(case))
 
             inp = re.sub('<[^<]+?>', '', inp)
             out = re.sub('<[^<]+?>', '', out)
@@ -586,8 +588,8 @@ class Spoj:
             formatted_inputs += [inp.strip()]
             formatted_outputs += [out.strip()]
 
-        print "Inputs", formatted_inputs
-        print "Outputs", formatted_outputs
+        print 'Inputs', formatted_inputs
+        print 'Outputs', formatted_outputs
 
         return formatted_inputs, formatted_outputs
 
@@ -595,8 +597,8 @@ class Spoj:
         """
         Method to scrape a single problem from spoj
         """
-        print "Fetching problem " + self.problem + " from SPOJ..."
-        url = "http://spoj.com/problems/" + self.problem
+        print 'Fetching problem ' + self.problem + ' from SPOJ...'
+        url = 'http://spoj.com/problems/' + self.problem
         req = Utilities.get_html(url)
         inputs, outputs = self.parse_html(req)
         Utilities.store_files(self.site, self.contest,
@@ -609,10 +611,10 @@ class Hackerrank:
     """
 
     def __init__(self, args):
-        self.site = args["site"]
-        self.contest = args["contest"]
-        self.problem = "-".join(args["problem"].split()).lower()
-        self.force_download = args["force"]
+        self.site = args['site']
+        self.contest = args['contest']
+        self.problem = '-'.join(args['problem'].split()).lower()
+        self.force_download = args['force']
 
     def parse_html(self, req):
         """
@@ -620,45 +622,45 @@ class Hackerrank:
         from a hackerrank problem
         """
         data = json.loads(req.text)
-        soup = bs(data["model"]["body_html"], "html.parser")
+        soup = bs(data['model']['body_html'], 'html.parser')
 
-        input_divs = soup.findAll("div", {"class": "challenge_sample_input"})
-        output_divs = soup.findAll("div", {"class": "challenge_sample_output"})
+        input_divs = soup.findAll('div', {'class': 'challenge_sample_input'})
+        output_divs = soup.findAll('div', {'class': 'challenge_sample_output'})
 
-        inputs = [input_div.find("pre") for input_div in input_divs]
-        outputs = [output_div.find("pre") for output_div in output_divs]
+        inputs = [input_div.find('pre') for input_div in input_divs]
+        outputs = [output_div.find('pre') for output_div in output_divs]
 
         regex_list = [
-            "<pre>(<code>)?",
-            "(</code>)?</pre>"
+            '<pre>(<code>)?',
+            '(</code>)?</pre>'
         ]
 
-        regex = re.compile("(%s)" % "|".join(regex_list))
+        regex = re.compile('(%s)' % '|'.join(regex_list))
 
         formatted_inputs, formatted_outputs = [], []
 
         for inp in inputs:
-            spans = inp.findAll("span")
+            spans = inp.findAll('span')
             if len(spans) > 0:
-                formatted_input = "\n".join(
+                formatted_input = '\n'.join(
                     [span.decode_contents() for span in spans])
             else:
-                formatted_input = regex.sub("", str(inp))
+                formatted_input = regex.sub('', str(inp))
 
             formatted_inputs += [formatted_input.strip()]
 
         for out in outputs:
-            spans = out.findAll("span")
+            spans = out.findAll('span')
             if len(spans) > 0:
-                formatted_output = "\n".join(
+                formatted_output = '\n'.join(
                     [span.decode_contents() for span in spans])
             else:
-                formatted_output = regex.sub("", str(out))
+                formatted_output = regex.sub('', str(out))
 
             formatted_outputs += [formatted_output.strip()]
 
-        print "Inputs", formatted_inputs
-        print "Outputs", formatted_outputs
+        print 'Inputs', formatted_inputs
+        print 'Outputs', formatted_outputs
 
         return formatted_inputs, formatted_outputs
 
@@ -666,9 +668,9 @@ class Hackerrank:
         """
         Method to scrape a single problem from hackerrank
         """
-        print "Fetching problem " + self.contest + "-" + self.problem + " from Hackerrank..."
-        url = "https://www.hackerrank.com/rest/contests/" + \
-            self.contest + "/challenges/" + self.problem
+        print 'Fetching problem ' + self.contest + '-' + self.problem + ' from Hackerrank...'
+        url = 'https://www.hackerrank.com/rest/contests/' + \
+            self.contest + '/challenges/' + self.problem
         req = Utilities.get_html(url)
         inputs, outputs = self.parse_html(req)
         Utilities.store_files(self.site, self.contest,
