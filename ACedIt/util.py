@@ -318,7 +318,7 @@ class Utilities:
             Utilities.download_problem_testcases(args)
 
             print "Done. Running your solution against sample cases..."
-            Utilities.run_solution(problem)
+            Utilities.run_solution(problem + '.' + extension)
 
         # Clean up temporary files
         Utilities.cleanup(num_cases)
