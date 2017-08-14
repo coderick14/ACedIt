@@ -3,12 +3,16 @@
 </h1>
 A command line tool to run your code against sample test cases. Without leaving the terminal :)
 
-##### Installation
+#### Installation
+##### Build from source
 + `git clone https://github.com/coderick14/ACedIt`
 + `cd ACedIt`
 + `python setup.py install`
 
-##### Usage
+##### As a Python package
+`pip install ACedIt`
+
+#### Usage
 ```
 usage: ACedIt [-h] [-s SITE] [-c CONTEST] [-p PROBLEM] [-f]
               [--run SOURCE_FILE]
@@ -27,13 +31,33 @@ optional arguments:
 
 ```
 
-##### Supported sites
+ACedIt requires the following working directory structure.
+```
+root-dir
+   |
+   |- Site1
+   |    |- Contest1
+   |    |     |- Problem1
+   |    |     |- Problem2
+   |    |- Contest2
+   |    |     |- Problem1
+   |    |     |- Problem2
+   |- Site2
+   |    |- Contest1
+   |    |     |- Problem1
+
+```
+During installation, ACedIt will set up the basic working directory structure.  
+While prefetching test cases, it will modify the same accordingly without any user intervention.  
+But in case you're writing your code first and then using `ACedIt --run <source_file>`, make sure you follow the directory structure mentioned.
+
+#### Supported sites
 + Codeforces
 + Codechef
 + Spoj
 + Hackerrank
 
-##### Demo
+#### Demo
 ![ACedIt demo GIF](https://github.com/coderick14/ACedIt/blob/master/images/demo.gif "Simple demo of how ACedIt works" )
 
 ##### Note : 
