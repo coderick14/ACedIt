@@ -216,8 +216,13 @@ class Utilities:
                     elif status == 0:
 
                         with open('temp_output' + str(i), 'r') as temp_handler, open(os.path.join(testcases_path, 'Output' + str(i)), 'r') as out_handler:
-                            expected_output = out_handler.read().strip()
-                            user_output = temp_handler.read().strip()
+                            expected_output = out_handler.read().strip().split('\n')
+                            user_output = temp_handler.read().strip().split('\n')
+
+                            expected_output = '\n'.join(
+                                [line.strip() for line in expected_output])
+                            user_output = '\n'.join(
+                                [line.strip() for line in user_output])
 
                             expected_outputs += [expected_output]
                             user_outputs += [user_output]
@@ -254,8 +259,13 @@ class Utilities:
                         elif status == 0:
 
                             with open('temp_output' + str(i), 'r') as temp_handler, open(os.path.join(testcases_path, 'Output' + str(i)), 'r') as out_handler:
-                                expected_output = out_handler.read().strip()
-                                user_output = temp_handler.read().strip()
+                                expected_output = out_handler.read().strip().split('\n')
+                                user_output = temp_handler.read().strip().split('\n')
+
+                                expected_output = '\n'.join(
+                                    [line.strip() for line in expected_output])
+                                user_output = '\n'.join(
+                                    [line.strip() for line in user_output])
 
                                 expected_outputs += [expected_output]
                                 user_outputs += [user_output]
