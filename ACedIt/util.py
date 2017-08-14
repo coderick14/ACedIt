@@ -99,8 +99,8 @@ class Utilities:
 
         workdir = data.get('workdir', None)
 
-        if not os.path.isdir(os.path.join(workdir,site,contest)):
-            os.makedirs(os.path.join(workdir,site,contest))
+        if not os.path.isdir(os.path.join(workdir, site, contest)):
+            os.makedirs(os.path.join(workdir, site, contest))
 
     @staticmethod
     def check_cache(site, contest, problem):
@@ -212,16 +212,17 @@ class Utilities:
         print 'Interrupted manually. Cleaning up...'
 
         if args['problem'] is not None:
-            path = os.path.join(Utilities.cache_dir, args['site'], args['contest'], args['problem'])
+            path = os.path.join(Utilities.cache_dir, args['site'], args[
+                                'contest'], args['problem'])
             if os.path.isdir(path):
                 rmtree(path)
         else:
-            path = os.path.join(Utilities.cache_dir, args['site'], args['contest'])
+            path = os.path.join(Utilities.cache_dir, args[
+                                'site'], args['contest'])
             if os.path.isdir(path):
                 rmtree(path)
 
         print 'Done. Exiting gracefully.'
-
 
     @staticmethod
     def run_solution(problem):
@@ -423,8 +424,8 @@ class Codeforces:
             pre = re.sub('<[^<]+?>', '', pre)
             formatted_outputs += [pre]
 
-        print 'Inputs', formatted_inputs
-        print 'Outputs', formatted_outputs
+        # print 'Inputs', formatted_inputs
+        # print 'Outputs', formatted_outputs
 
         return formatted_inputs, formatted_outputs
 
@@ -452,6 +453,7 @@ class Codeforces:
         inputs, outputs = self.parse_html(req)
         Utilities.store_files(self.site, self.contest,
                               self.problem, inputs, outputs)
+        print 'Done.'
 
     def scrape_contest(self):
         """
@@ -462,8 +464,7 @@ class Codeforces:
         req = Utilities.get_html(url)
         links = self.get_problem_links(req)
 
-        print 'Found problems'
-        print '\n'.join(links)
+        print 'Found %d problems..' % (len(links))
 
         if not self.force_download:
             cached_problems = os.listdir(os.path.join(
@@ -528,8 +529,8 @@ class Codechef:
             formatted_inputs += [inp.strip()]
             formatted_outputs += [out.strip()]
 
-        print 'Inputs', formatted_inputs
-        print 'Outputs', formatted_outputs
+        # print 'Inputs', formatted_inputs
+        # print 'Outputs', formatted_outputs
 
         return formatted_inputs, formatted_outputs
 
@@ -559,6 +560,7 @@ class Codechef:
         inputs, outputs = self.parse_html(req)
         Utilities.store_files(self.site, self.contest,
                               self.problem, inputs, outputs)
+        print 'Done.'
 
     def scrape_contest(self):
         """
@@ -569,8 +571,7 @@ class Codechef:
         req = Utilities.get_html(url)
         links = self.get_problem_links(req)
 
-        print 'Found problems'
-        print '\n'.join(links)
+        print 'Found %d problems..' % (len(links))
 
         if not self.force_download:
             cached_problems = os.listdir(os.path.join(
@@ -638,8 +639,8 @@ class Spoj:
             formatted_inputs += [inp.strip()]
             formatted_outputs += [out.strip()]
 
-        print 'Inputs', formatted_inputs
-        print 'Outputs', formatted_outputs
+        # print 'Inputs', formatted_inputs
+        # print 'Outputs', formatted_outputs
 
         return formatted_inputs, formatted_outputs
 
@@ -653,6 +654,7 @@ class Spoj:
         inputs, outputs = self.parse_html(req)
         Utilities.store_files(self.site, self.contest,
                               self.problem, inputs, outputs)
+        print 'Done.'
 
 
 class Hackerrank:
@@ -663,7 +665,8 @@ class Hackerrank:
     def __init__(self, args):
         self.site = args['site']
         self.contest = args['contest']
-        self.problem = '-'.join(args['problem'].split()).lower()
+        self.problem = '-'.join(args['problem'].split()
+                                ).lower() if args['problem'] is not None else None
         self.force_download = args['force']
 
     def parse_html(self, req):
@@ -709,10 +712,22 @@ class Hackerrank:
 
             formatted_outputs += [formatted_output.strip()]
 
-        print 'Inputs', formatted_inputs
-        print 'Outputs', formatted_outputs
+        # print 'Inputs', formatted_inputs
+        # print 'Outputs', formatted_outputs
 
         return formatted_inputs, formatted_outputs
+
+    def get_problem_links(self, req):
+        """
+        Method to get the links for the problems
+        in a given hackerrank contest
+        """
+        data = json.loads(req.text)
+        data = data['models']
+        links = ['https://www.hackerrank.com/rest/contests/' + self.contest +
+                 '/challenges/' + problem['slug'] for problem in data]
+
+        return links
 
     def scrape_problem(self):
         """
@@ -725,3 +740,32 @@ class Hackerrank:
         inputs, outputs = self.parse_html(req)
         Utilities.store_files(self.site, self.contest,
                               self.problem, inputs, outputs)
+        print 'Done.'
+
+    def scrape_contest(self):
+        """
+        Method to scrape all problems from a given hackerrank contest
+        """
+        print 'Checking problems available for contest ' + self.contest + '...'
+        url = 'https://www.hackerrank.com/rest/contests/' + self.contest + '/challenges'
+        req = Utilities.get_html(url)
+        links = self.get_problem_links(req)
+
+        print 'Found %d problems..' % (len(links))
+
+        if not self.force_download:
+            cached_problems = os.listdir(os.path.join(
+                Utilities.cache_dir, self.site, self.contest))
+            links = [link for link in links if link.split(
+                '/')[-1] not in cached_problems]
+
+        rs = (grq.get(link) for link in links)
+        responses = grq.map(rs)
+
+        for response in responses:
+            if response is not None and response.status_code == 200:
+                inputs, outputs = self.parse_html(response)
+                self.problem = response.url.split('/')[-1]
+                Utilities.check_cache(self.site, self.contest, self.problem)
+                Utilities.store_files(
+                    self.site, self.contest, self.problem, inputs, outputs)

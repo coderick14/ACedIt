@@ -1,7 +1,10 @@
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/coderick14/ACedIt/issues)
+[![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)](https://github.com/coderick14/ACedIt/) 
+[![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
 <h1 align="center">
     <img src="https://github.com/coderick14/ACedIt/blob/master/images/logo.png" width="500"/><br/>
 </h1>
-A command line tool to run your code against sample test cases. Without leaving the terminal :)
+A command line tool to run your code against sample test cases. Without leaving the terminal :) 
 
 #### Installation
 ##### Build from source
