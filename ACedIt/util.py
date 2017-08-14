@@ -86,11 +86,31 @@ class Utilities:
         return flags
 
     @staticmethod
+    def create_workdir_structure(site, contest):
+        """
+        Method to create the working directory structure
+        """
+        try:
+            with open(os.path.join(Utilities.cache_dir, 'constants.json'), 'r') as f:
+                data = f.read()
+            data = json.loads(data)
+        except:
+            pass
+
+        workdir = data.get('workdir', None)
+
+        if not os.path.isdir(os.path.join(workdir,site,contest)):
+            os.makedirs(os.path.join(workdir,site,contest))
+
+    @staticmethod
     def check_cache(site, contest, problem):
         """
         Method to check if the test cases already exist in cache
         If not, create the directory structure to store test cases
         """
+
+        Utilities.create_workdir_structure(site, contest)
+        
         if problem is None:
             if not os.path.isdir(os.path.join(Utilities.cache_dir, site, contest)):
                 os.makedirs(os.path.join(Utilities.cache_dir, site,

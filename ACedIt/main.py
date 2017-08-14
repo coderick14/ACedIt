@@ -11,7 +11,7 @@ def validate_args(args):
         sys.exit(0)
 
     if args['source'] and (args['contest'] or args['problem'] or args['force']):
-        print 'ACedIt run <source_file> doesn\'t support other flags'
+        print 'ACedIt --run <source_file> doesn\'t support other flags'
         sys.exit(0)
     elif args['source']:
         return
