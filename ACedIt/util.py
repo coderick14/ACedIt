@@ -110,7 +110,7 @@ class Utilities:
         """
 
         Utilities.create_workdir_structure(site, contest)
-        
+
         if problem is None:
             if not os.path.isdir(os.path.join(Utilities.cache_dir, site, contest)):
                 os.makedirs(os.path.join(Utilities.cache_dir, site,
@@ -202,6 +202,26 @@ class Utilities:
         for i in xrange(num_cases):
             if os.path.isfile('temp_output' + str(i)):
                 os.remove('temp_output' + str(i))
+
+    @staticmethod
+    def handle_kbd_interrupt(args):
+        """
+        Method to handle keyboard interrupt
+        """
+        from shutil import rmtree
+        print 'Interrupted manually. Cleaning up...'
+
+        if args['problem'] is not None:
+            path = os.path.join(Utilities.cache_dir, args['site'], args['contest'], args['problem'])
+            if os.path.isdir(path):
+                rmtree(path)
+        else:
+            path = os.path.join(Utilities.cache_dir, args['site'], args['contest'])
+            if os.path.isdir(path):
+                rmtree(path)
+
+        print 'Done. Exiting gracefully.'
+
 
     @staticmethod
     def run_solution(problem):

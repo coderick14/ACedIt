@@ -44,7 +44,7 @@ def main():
 
     except KeyboardInterrupt:
         # Clean up files here
-        print 'Interruped manually. Exiting gracefully.'
+        util.Utilities.handle_kbd_interrupt(args)
 
 
 if __name__ == '__main__':
