@@ -56,7 +56,7 @@ setup(
 
     description='Download and test against sample test cases from any competitive programming website',
 
-    author='https://github.com/coderick14',
+    author='Deep Bhattacharyya',
 
     author_email='bhattacharyya.rick14@gmail.com',
 
