@@ -449,6 +449,28 @@ class Codeforces:
 
         return links
 
+    def handle_batch_requests(self, links):
+        """
+        Method to send simultaneous requests to
+        all problem pages
+        """
+        rs = (grq.get(link) for link in links)
+        responses = grq.map(rs)
+
+        failed_requests = []
+
+        for response in responses:
+            if response is not None and response.status_code == 200:
+                inputs, outputs = self.parse_html(response)
+                self.problem = response.url.split('/')[-1]
+                Utilities.check_cache(self.site, self.contest, self.problem)
+                Utilities.store_files(
+                    self.site, self.contest, self.problem, inputs, outputs)
+            else:
+                failed_requests += [response.url]
+
+        return failed_requests
+
     def scrape_problem(self):
         """
         Method to scrape a single problem from codeforces
@@ -479,16 +501,9 @@ class Codeforces:
             links = [link for link in links if link.split(
                 '/')[-1] not in cached_problems]
 
-        rs = (grq.get(link) for link in links)
-        responses = grq.map(rs)
-
-        for response in responses:
-            if response is not None and response.status_code == 200:
-                inputs, outputs = self.parse_html(response)
-                self.problem = response.url.split('/')[-1]
-                Utilities.check_cache(self.site, self.contest, self.problem)
-                Utilities.store_files(
-                    self.site, self.contest, self.problem, inputs, outputs)
+        failed_requests = self.handle_batch_requests(links)
+        if len(failed_requests) > 0:
+            self.handle_batch_requests(failed_requests)
 
 
 class Codechef:
@@ -556,6 +571,32 @@ class Codechef:
 
         return links
 
+    def handle_batch_requests(self, links):
+        """
+        Method to send simultaneous requests to
+        all problem pages
+        """
+        rs = (grq.get(link) for link in links)
+        responses = grq.map(rs)
+
+        # responses = []
+        # for link in links:
+        #     responses += [rq.get(link)]
+
+        failed_requests = []
+
+        for response in responses:
+            if response is not None and response.status_code == 200:
+                inputs, outputs = self.parse_html(response)
+                self.problem = response.url.split('/')[-1]
+                Utilities.check_cache(self.site, self.contest, self.problem)
+                Utilities.store_files(
+                    self.site, self.contest, self.problem, inputs, outputs)
+            else:
+                failed_requests += [response.url]
+
+        return failed_requests
+
     def scrape_problem(self):
         """
         Method to scrape a single problem from codechef
@@ -586,20 +627,9 @@ class Codechef:
             links = [link for link in links if link.split(
                 '/')[-1] not in cached_problems]
 
-        # rs = (grq.get(link) for link in links)
-        # responses = grq.map(rs)
-
-        responses = []
-        for link in links:
-            responses += [rq.get(link)]
-
-        for response in responses:
-            if response is not None and response.status_code == 200:
-                inputs, outputs = self.parse_html(response)
-                self.problem = response.url.split('/')[-1]
-                Utilities.check_cache(self.site, self.contest, self.problem)
-                Utilities.store_files(
-                    self.site, self.contest, self.problem, inputs, outputs)
+        failed_requests = self.handle_batch_requests(links)
+        if len(failed_requests) > 0:
+            self.handle_batch_requests(failed_requests)
 
 
 class Spoj:
@@ -736,6 +766,28 @@ class Hackerrank:
 
         return links
 
+    def handle_batch_requests(self, links):
+        """
+        Method to send simultaneous requests to
+        all problem pages
+        """
+        rs = (grq.get(link) for link in links)
+        responses = grq.map(rs)
+
+        failed_requests = []
+
+        for response in responses:
+            if response is not None and response.status_code == 200:
+                inputs, outputs = self.parse_html(response)
+                self.problem = response.url.split('/')[-1]
+                Utilities.check_cache(self.site, self.contest, self.problem)
+                Utilities.store_files(
+                    self.site, self.contest, self.problem, inputs, outputs)
+            else:
+                failed_requests += [response.url]
+
+        return failed_requests
+
     def scrape_problem(self):
         """
         Method to scrape a single problem from hackerrank
@@ -766,13 +818,6 @@ class Hackerrank:
             links = [link for link in links if link.split(
                 '/')[-1] not in cached_problems]
 
-        rs = (grq.get(link) for link in links)
-        responses = grq.map(rs)
-
-        for response in responses:
-            if response is not None and response.status_code == 200:
-                inputs, outputs = self.parse_html(response)
-                self.problem = response.url.split('/')[-1]
-                Utilities.check_cache(self.site, self.contest, self.problem)
-                Utilities.store_files(
-                    self.site, self.contest, self.problem, inputs, outputs)
+        failed_requests = self.handle_batch_requests(links)
+        if len(failed_requests) > 0:
+            self.handle_batch_requests(failed_requests)
