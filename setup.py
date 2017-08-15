@@ -52,7 +52,7 @@ setup(
 
     packages=['ACedIt'],
 
-    version='1.0',
+    version='1.0.0',
 
     description='Download and test against sample test cases from any competitive programming website',
 
