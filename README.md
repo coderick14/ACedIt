@@ -14,7 +14,7 @@ A command line tool to run your code against sample test cases. Without leaving 
 
 ##### As a Python package
 ```
-pip install ACedIt
+sudo pip install ACedIt
 ```
 
 #### Usage
