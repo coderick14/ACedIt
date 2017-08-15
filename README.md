@@ -13,7 +13,9 @@ A command line tool to run your code against sample test cases. Without leaving 
 + `python setup.py install`
 
 ##### As a Python package
-`pip install ACedIt`
+```
+pip install ACedIt
+```
 
 #### Usage
 ```
@@ -59,6 +61,27 @@ But in case you're writing your code first and then using `ACedIt --run <source_
 + Codechef
 + Spoj
 + Hackerrank
+
+#### Examples
++ Fetch test cases for a single problem  
+```
+ACedIt -s codechef -c AUG17 -p CHEFFA
+```
++ Fetch test cases for all problems in a contest  
+```
+ACedIt -s codechef -c AUG17
+```
++ Force download test cases, even when they are cached  
+```
+ACedIt -s codeforces -c 86 -p D -f
+```
++ Test your code against sample cases  
+```
+ACedIt --run D.cpp
+```
+```
+ACedIt --run CHEFFA.py
+```
 
 #### Demo
 ![ACedIt demo GIF](https://github.com/coderick14/ACedIt/blob/master/images/demo.gif "Simple demo of how ACedIt works" )
