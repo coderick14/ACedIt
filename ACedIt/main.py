@@ -6,9 +6,6 @@ supported_sites = ['codeforces', 'codechef', 'hackerrank', 'spoj']
 
 
 def validate_args(args):
-    if args['site'] not in supported_sites:
-        print 'Sorry. ACedIt only supports %s till now.' % (', '.join(supported_sites))
-        sys.exit(0)
 
     if args['default_site'] is not None or args['workdir'] is not None:
         return
@@ -39,7 +36,8 @@ def main():
 
         if args['workdir']:
             # set working directory
-            util.Utilities.set_constants('workdir', args['workdir'], supported_sites)
+            util.Utilities.set_constants(
+                'workdir', args['workdir'], supported_sites)
 
         elif args['source']:
             # run code
@@ -55,7 +53,8 @@ def main():
 
     except KeyboardInterrupt:
         # Clean up files here
-        util.Utilities.handle_kbd_interrupt(args)
+        util.Utilities.handle_kbd_interrupt(
+            args['site'], args['contest'], args['problem'])
 
 
 if __name__ == '__main__':

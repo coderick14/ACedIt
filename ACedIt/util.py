@@ -37,6 +37,7 @@ class Utilities:
 
         parser.add_argument('-s', '--site',
                             dest='site',
+                            choices=supported_sites,
                             help='The competitive programming platform, e.g. codeforces, codechef etc')
 
         parser.add_argument('-c', '--contest',
@@ -63,7 +64,7 @@ class Utilities:
 
         parser.add_argument('--set-workdir',
                             dest='workdir',
-                            help='ABSOLUTE PATH to working directory')        
+                            help='ABSOLUTE PATH to working directory')
 
         parser.set_defaults(force=False)
 
@@ -118,11 +119,11 @@ class Utilities:
             for site in supported_sites:
                 if not os.path.isdir(os.path.join(workdir, site)):
                     os.makedirs(os.path.join(workdir, site))
-            choice = raw_input('Remove all files from previous working directory %s? (y/N) : ' % (previous_path))
+            choice = raw_input(
+                'Remove all files from previous working directory %s? (y/N) : ' % (previous_path))
             if choice == 'y':
                 from shutil import rmtree
                 rmtree(previous_path)
-
 
     @staticmethod
     def create_workdir_structure(site, contest):
@@ -243,21 +244,19 @@ class Utilities:
                 os.remove('temp_output' + str(i))
 
     @staticmethod
-    def handle_kbd_interrupt(args):
+    def handle_kbd_interrupt(site, contest, problem):
         """
         Method to handle keyboard interrupt
         """
         from shutil import rmtree
-        print 'Interrupted manually. Cleaning up...'
+        print 'Cleaning up...'
 
-        if args['problem'] is not None:
-            path = os.path.join(Utilities.cache_dir, args['site'], args[
-                                'contest'], args['problem'])
+        if problem is not None:
+            path = os.path.join(Utilities.cache_dir, site, contest, problem)
             if os.path.isdir(path):
                 rmtree(path)
         else:
-            path = os.path.join(Utilities.cache_dir, args[
-                                'site'], args['contest'])
+            path = os.path.join(Utilities.cache_dir, site, contest)
             if os.path.isdir(path):
                 rmtree(path)
 
@@ -454,6 +453,12 @@ class Codeforces:
         inputs = soup.findAll('div', {'class': 'input'})
         outputs = soup.findAll('div', {'class': 'output'})
 
+        if len(inputs) == 0 or len(outputs) == 0:
+            print 'Problem not found..'
+            Utilities.handle_kbd_interrupt(
+                self.site, self.contest, self.problem)
+            sys.exit(0)
+
         repls = ('<br>', '\n'), ('<br/>', '\n'), ('</br>', '')
 
         formatted_inputs, formatted_outputs = [], []
@@ -483,6 +488,13 @@ class Codeforces:
         soup = bs(req.text, 'html.parser')
 
         table = soup.find('table', {'class': 'problems'})
+
+        if table is None:
+            print 'Contest not found..'
+            Utilities.handle_kbd_interrupt(
+                self.site, self.contest, self.problem)
+            sys.exit(0)
+
         links = ['http://codeforces.com' +
                  td.find('a')['href'] for td in table.findAll('td', {'class': 'id'})]
 
@@ -561,8 +573,14 @@ class Codechef:
         Method to parse the html and get test cases
         from a codechef problem
         """
-        data = json.loads(req.text)
-        soup = bs(data['body'], 'html.parser')
+        try:
+            data = json.loads(req.text)
+            soup = bs(data['body'], 'html.parser')
+        except (KeyError, ValueError):
+            print 'Problem not found..'
+            Utilities.handle_kbd_interrupt(
+                self.site, self.contest, self.problem)
+            sys.exit(0)
 
         test_cases = soup.findAll('pre')
         formatted_inputs, formatted_outputs = [], []
@@ -603,6 +621,13 @@ class Codechef:
         soup = bs(req.text, 'html.parser')
 
         table = soup.find('table', {'class': 'dataTable'})
+
+        if table is None:
+            print 'Contest not found..'
+            Utilities.handle_kbd_interrupt(
+                self.site, self.contest, self.problem)
+            sys.exit(0)
+
         links = [div.find('a')['href']
                  for div in table.findAll('div', {'class': 'problemname'})]
         links = ['https://codechef.com/api/contests/' + self.contest +
@@ -750,8 +775,15 @@ class Hackerrank:
         Method to parse the html and get test cases
         from a hackerrank problem
         """
-        data = json.loads(req.text)
-        soup = bs(data['model']['body_html'], 'html.parser')
+
+        try:
+            data = json.loads(req.text)
+            soup = bs(data['model']['body_html'], 'html.parser')
+        except (KeyError, ValueError):
+            print 'Problem not found..'
+            Utilities.handle_kbd_interrupt(
+                self.site, self.contest, self.problem)
+            sys.exit(0)
 
         input_divs = soup.findAll('div', {'class': 'challenge_sample_input'})
         output_divs = soup.findAll('div', {'class': 'challenge_sample_output'})
@@ -798,8 +830,16 @@ class Hackerrank:
         Method to get the links for the problems
         in a given hackerrank contest
         """
-        data = json.loads(req.text)
-        data = data['models']
+
+        try:
+            data = json.loads(req.text)
+            data = data['models']
+        except (KeyError, ValueError):
+            print 'Contest not found..'
+            Utilities.handle_kbd_interrupt(
+                self.site, self.contest, self.problem)
+            sys.exit(0)
+
         links = ['https://www.hackerrank.com/rest/contests/' + self.contest +
                  '/challenges/' + problem['slug'] for problem in data]
 
