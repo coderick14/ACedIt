@@ -130,6 +130,11 @@ class Utilities:
         """
         Method to create the working directory structure
         """
+
+        # No need to create directories for SPOJ as it does not have contests
+        if site == 'spoj':
+            return
+
         try:
             with open(os.path.join(Utilities.cache_dir, 'constants.json'), 'r') as f:
                 data = f.read()
@@ -157,6 +162,9 @@ class Utilities:
                                          contest))
             return False
 
+        # Handle case for SPOJ specially as it does not have contests
+        contest = '' if site == 'spoj' else contest
+
         if os.path.isdir(os.path.join(Utilities.cache_dir, site, contest, problem)):
             return True
         else:
@@ -169,6 +177,10 @@ class Utilities:
         """
         Method to store the test cases in files
         """
+
+        # Handle case for SPOJ specially as it does not have contests
+        contest = '' if site == 'spoj' else contest
+
         for i, inp in enumerate(inputs):
             filename = os.path.join(
                 Utilities.cache_dir, site, contest, problem, 'Input' + str(i))
@@ -251,6 +263,9 @@ class Utilities:
         from shutil import rmtree
         print 'Cleaning up...'
 
+        # Handle case for SPOJ specially as it does not have contests
+        contest = '' if site == 'spoj' else contest
+
         if problem is not None:
             path = os.path.join(Utilities.cache_dir, site, contest, problem)
             if os.path.isdir(path):
@@ -275,8 +290,11 @@ class Utilities:
             print 'ERROR : No such file'
             sys.exit(0)
 
+        # For SPOJ, go up two directory levels as it does not have contests
+        up_dir_level = 2 if problem_path.split('/')[-2] == 'spoj' else 3
+
         testcases_path = os.path.join(
-            Utilities.cache_dir, *problem_path.split('/')[-3:])
+            Utilities.cache_dir, *problem_path.split('/')[-up_dir_level:])
 
         if os.path.isdir(testcases_path):
             num_cases = len(os.listdir(testcases_path)) / 2
@@ -401,15 +419,26 @@ class Utilities:
 
         else:
             print 'Test cases not found locally...'
-            args = {
-                'site': testcases_path.split('/')[-3],
-                'contest': testcases_path.split('/')[-2],
-                'problem': testcases_path.split('/')[-1],
-                'force': True
-            }
+
+            # Handle case for SPOJ specially as it does not have contests
+            if problem_path.split('/')[-2] == 'spoj':
+                args = {
+                    'site': 'spoj',
+                    'contest': None,
+                    'problem': testcases_path.split('/')[-1],
+                    'force': True
+                }
+            else:
+                args = {
+                    'site': testcases_path.split('/')[-3],
+                    'contest': testcases_path.split('/')[-2],
+                    'problem': testcases_path.split('/')[-1],
+                    'force': True
+                }
+
             Utilities.download_problem_testcases(args)
 
-            print 'Done. Running your solution against sample cases...'
+            print 'Running your solution against sample cases...'
             Utilities.run_solution(problem + '.' + extension)
 
     @staticmethod
@@ -715,6 +744,13 @@ class Spoj:
         soup = bs(req.text, 'html.parser')
 
         test_cases = soup.findAll('pre')
+
+        if test_cases is None or len(test_cases) == 0:
+            print 'Problem not found..'
+            Utilities.handle_kbd_interrupt(
+                self.site, self.contest, self.problem)
+            sys.exit(0)
+
         formatted_inputs, formatted_outputs = [], []
 
         input_list = [
