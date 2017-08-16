@@ -23,12 +23,12 @@ A command line tool to run your code against sample test cases. Without leaving 
 
 ##### As a Python package
 ```
-pip install ACedIt
+pip install --user ACedIt
 ```
 
 #### Usage
 ```
-usage: ACedIt [-h] [-s SITE] [-c CONTEST] [-p PROBLEM] [-f]
+usage: acedit [-h] [-s SITE] [-c CONTEST] [-p PROBLEM] [-f]
               [--run SOURCE_FILE]
               [--set-default-site {codeforces,codechef,hackerrank,spoj}]
               [--set-workdir WORKDIR]
@@ -74,36 +74,36 @@ workdir
 During installation, ACedIt will set up the basic working directory structure.  
 While prefetching test cases, it will modify the same accordingly without any user intervention.
 
-***But in case you're writing your code in some other directory, you can use `ACedIt --run <SOURCE_FILE> -s SITE -c CONTEST -p PROBLEM`. You can omit `-s` as it'll take the default site.***
+***But in case you're writing your code in some other directory, you can use `acedit --run <SOURCE_FILE> -s SITE -c CONTEST -p PROBLEM`. You can omit `-s` as it'll take the default site.***
 
 ***But there's no need to specify the `-s`, `-c` and `-p` flags if you follow the above mentioned directory structure (ACedIt will create most of it for you on the fly :)***
 
 #### Examples
 + Fetch test cases for a single problem  
 ```
-ACedIt -s codechef -c AUG17 -p CHEFFA
+acedit -s codechef -c AUG17 -p CHEFFA
 ```
 + Fetch test cases for all problems in a contest  
 ```
-ACedIt -s codechef -c AUG17
+acedit -s codechef -c AUG17
 ```
 + Force download test cases, even when they are cached  
 ```
-ACedIt -s codeforces -c 86 -p D -f
+acedit -s codeforces -c 86 -p D -f
 ```
 + Test your code against sample cases (when following the recommended directory structure)
 ```
-ACedIt --run D.cpp
+acedit --run D.cpp
 ```
 ```
-ACedIt --run CHEFFA.py
+acedit --run CHEFFA.py
 ```
 + Test your code against sample cases (from any other directory)
 ```
-ACedIt --run solve.cpp -c 835 -p D
+acedit --run solve.cpp -c 835 -p D
 ```
 ```
-ACedIt --run test.py -s codechef -c AUG17 -p CHEFFA
+acedit --run test.py -s codechef -c AUG17 -p CHEFFA
 ```
 
 ##### Note : 

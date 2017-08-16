@@ -5,7 +5,7 @@ except ImportError:
 
 import sys
 
-from ACedIt.install_entry import InstallEntry
+from acedit.install_entry import InstallEntry
 
 with open('requirements.txt', 'r') as f:
     requirements = [line.strip() for line in f.readlines()]
@@ -17,9 +17,9 @@ if sys.version_info >= (3,):
 setup(
     name='ACedIt',
 
-    packages=['ACedIt'],
+    packages=['acedit'],
 
-    version='1.0.1',
+    version='1.0.4',
 
     description='Download and test against sample test cases from any competitive programming website',
 
@@ -30,7 +30,7 @@ setup(
     install_requires=requirements,
 
     entry_points={
-        'console_scripts': ['ACedIt=ACedIt.main:main']
+        'console_scripts': ['acedit=acedit.main:main']
     },
 
     zip_safe=False,
