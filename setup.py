@@ -14,35 +14,20 @@ extra = {}
 if sys.version_info >= (3,):
     extra['use_2to3'] = True
 
-print 'Please specify a default site (codeforces) :',
-default_site = raw_input()
-if default_site == '':
-    print 'Setting codeforces as default site'
-    default_site = 'codeforces'
-
-print 'Please specify working directory (relative to home directory) :',
-workdir = raw_input()
-if workdir == '':
-    workdir = 'ACedIt'
-workdir = os.path.join(os.path.expanduser('~'), workdir)
+default_site = 'codeforces'
+workdir = os.path.join(os.path.expanduser('~'), 'ACedIt')
+cache_dir = os.path.join(os.path.expanduser('~'), '.cache', 'ACedIt')
 
 from ACedIt.main import supported_sites
 
-if not os.path.isdir(workdir):
-    os.makedirs(workdir)
-    for site in supported_sites:
-        os.makedirs(os.path.join(workdir, site))
-
-cache_dir = os.path.join(os.path.expanduser('~'), '.cache', 'ACedIt')
-if not os.path.isdir(cache_dir):
-    os.makedirs(cache_dir)
-    for site in supported_sites:
+for site in supported_sites:
+	# create cache directory and working directory structure
+    if not os.path.isdir(os.path.join(cache_dir, site)):
         os.makedirs(os.path.join(cache_dir, site))
+    if not os.path.isdir(os.path.join(workdir, site)):
+    	os.makedirs(os.path.join(workdir, site))
 
-print 'Setting ' + workdir + ' as working directory'
-
-
-data = {'default_site': default_site.strip(), 'workdir': workdir,
+data = {'default_site': default_site.strip(), 'workdir': os.path.expanduser('~'),
         'cachedir': cache_dir}
 with open(os.path.join(cache_dir, 'constants.json'), 'w') as f:
     f.write(json.dumps(data, indent=2))
@@ -52,7 +37,7 @@ setup(
 
     packages=['ACedIt'],
 
-    version='1.0.0',
+    version='1.0.1',
 
     description='Download and test against sample test cases from any competitive programming website',
 

@@ -28,7 +28,7 @@ class Utilities:
     }
 
     @staticmethod
-    def parse_flags():
+    def parse_flags(supported_sites):
         """
         Utility function to parse command line flags
         """
@@ -37,6 +37,7 @@ class Utilities:
 
         parser.add_argument('-s', '--site',
                             dest='site',
+                            choices=supported_sites,
                             help='The competitive programming platform, e.g. codeforces, codechef etc')
 
         parser.add_argument('-c', '--contest',
@@ -55,6 +56,15 @@ class Utilities:
         parser.add_argument('--run',
                             dest='source_file',
                             help='Name of source file to be run')
+
+        parser.add_argument('--set-default-site',
+                            dest='default_site',
+                            choices=supported_sites,
+                            help='Name of default site to be used when -s flag is not specified')
+
+        parser.add_argument('--set-workdir',
+                            dest='workdir',
+                            help='ABSOLUTE PATH to working directory')
 
         parser.set_defaults(force=False)
 
@@ -82,14 +92,49 @@ class Utilities:
         flags['force'] = args.force
         flags['site'] = flags['site'].lower()
         flags['source'] = args.source_file
+        flags['default_site'] = args.default_site
+        flags['workdir'] = args.workdir
 
         return flags
+
+    @staticmethod
+    def set_constants(key, value, supported_sites=None):
+        """
+        Utility method to set default site and working directory
+        """
+        with open(os.path.join(Utilities.cache_dir, 'constants.json'), 'r+') as f:
+            data = f.read()
+            data = json.loads(data)
+            previous_value = data[key]
+            data[key] = value
+            f.seek(0)
+            f.write(json.dumps(data, indent=2))
+            f.truncate()
+
+        print 'Set %s to %s' % (key, value)
+
+        if key == 'workdir':
+            workdir = os.path.join(value, 'ACedIt')
+            previous_path = os.path.join(previous_value, 'ACedIt')
+            for site in supported_sites:
+                if not os.path.isdir(os.path.join(workdir, site)):
+                    os.makedirs(os.path.join(workdir, site))
+            choice = raw_input(
+                'Remove all files from previous working directory %s? (y/N) : ' % (previous_path))
+            if choice == 'y':
+                from shutil import rmtree
+                rmtree(previous_path)
 
     @staticmethod
     def create_workdir_structure(site, contest):
         """
         Method to create the working directory structure
         """
+
+        # No need to create directories for SPOJ as it does not have contests
+        if site == 'spoj':
+            return
+
         try:
             with open(os.path.join(Utilities.cache_dir, 'constants.json'), 'r') as f:
                 data = f.read()
@@ -117,6 +162,9 @@ class Utilities:
                                          contest))
             return False
 
+        # Handle case for SPOJ specially as it does not have contests
+        contest = '' if site == 'spoj' else contest
+
         if os.path.isdir(os.path.join(Utilities.cache_dir, site, contest, problem)):
             return True
         else:
@@ -129,6 +177,10 @@ class Utilities:
         """
         Method to store the test cases in files
         """
+
+        # Handle case for SPOJ specially as it does not have contests
+        contest = '' if site == 'spoj' else contest
+
         for i, inp in enumerate(inputs):
             filename = os.path.join(
                 Utilities.cache_dir, site, contest, problem, 'Input' + str(i))
@@ -204,31 +256,34 @@ class Utilities:
                 os.remove('temp_output' + str(i))
 
     @staticmethod
-    def handle_kbd_interrupt(args):
+    def handle_kbd_interrupt(site, contest, problem):
         """
         Method to handle keyboard interrupt
         """
         from shutil import rmtree
-        print 'Interrupted manually. Cleaning up...'
+        print 'Cleaning up...'
 
-        if args['problem'] is not None:
-            path = os.path.join(Utilities.cache_dir, args['site'], args[
-                                'contest'], args['problem'])
+        # Handle case for SPOJ specially as it does not have contests
+        contest = '' if site == 'spoj' else contest
+
+        if problem is not None:
+            path = os.path.join(Utilities.cache_dir, site, contest, problem)
             if os.path.isdir(path):
                 rmtree(path)
         else:
-            path = os.path.join(Utilities.cache_dir, args[
-                                'site'], args['contest'])
+            path = os.path.join(Utilities.cache_dir, site, contest)
             if os.path.isdir(path):
                 rmtree(path)
 
         print 'Done. Exiting gracefully.'
 
     @staticmethod
-    def run_solution(problem):
+    def run_solution(args):
         """
         Method to run and test the user's solution against sample cases
         """
+        problem = args['source']
+
         extension = problem.split('.')[-1]
         problem = problem.split('.')[0]
         problem_path = os.path.join(os.getcwd(), problem)
@@ -237,8 +292,19 @@ class Utilities:
             print 'ERROR : No such file'
             sys.exit(0)
 
-        testcases_path = os.path.join(
-            Utilities.cache_dir, *problem_path.split('/')[-3:])
+        if args['problem']:
+            # Check if problem code has been specified explicitly
+            args['contest'] = '' if args['site'] == 'spoj' else args['contest']
+            testcases_path = os.path.join(Utilities.cache_dir, args['site'], args[
+                                          'contest'], args['problem'])
+        else:
+            # Take arguments from path
+
+            # For SPOJ, go up two directory levels as it does not have contests
+            up_dir_level = 2 if problem_path.split('/')[-2] == 'spoj' else 3
+
+            testcases_path = os.path.join(
+                Utilities.cache_dir, *problem_path.split('/')[-up_dir_level:])
 
         if os.path.isdir(testcases_path):
             num_cases = len(os.listdir(testcases_path)) / 2
@@ -255,7 +321,7 @@ class Utilities:
                                     Utilities.colors['YELLOW'] + 'TLE' + Utilities.colors['ENDC']]
 
                     elif status == 0:
-
+                        # Ran successfully
                         with open('temp_output' + str(i), 'r') as temp_handler, open(os.path.join(testcases_path, 'Output' + str(i)), 'r') as out_handler:
                             expected_output = out_handler.read().strip().split('\n')
                             user_output = temp_handler.read().strip().split('\n')
@@ -289,6 +355,8 @@ class Utilities:
                     compiler + ' ' + problem_path + '.cpp')
 
                 if compile_status == 0:
+
+                    # Compiled successfully
                     for i in xrange(num_cases):
                         status = os.system('timeout 2s ./a.out < ' + os.path.join(
                             testcases_path, 'Input' + str(i)) + ' > temp_output' + str(i))
@@ -298,7 +366,7 @@ class Utilities:
                                 'YELLOW'] + 'TLE' + Utilities.colors['ENDC']]
 
                         elif status == 0:
-
+                            # Ran successfully
                             with open('temp_output' + str(i), 'r') as temp_handler, open(os.path.join(testcases_path, 'Output' + str(i)), 'r') as out_handler:
                                 expected_output = out_handler.read().strip().split('\n')
                                 user_output = temp_handler.read().strip().split('\n')
@@ -332,7 +400,7 @@ class Utilities:
                     sys.exit(0)
 
             else:
-                print 'Supports only C++ and Python as of now. Support for Java coming soon.'
+                print 'Supports only C, C++ and Python as of now. Support for Java coming soon.'
                 sys.exit(0)
 
             from terminaltables import AsciiTable
@@ -363,16 +431,32 @@ class Utilities:
 
         else:
             print 'Test cases not found locally...'
-            args = {
-                'site': testcases_path.split('/')[-3],
-                'contest': testcases_path.split('/')[-2],
-                'problem': testcases_path.split('/')[-1],
-                'force': True
-            }
+
+            if args['problem'] is None:
+                # Handle case for SPOJ specially as it does not have contests
+                if problem_path.split('/')[-2] == 'spoj':
+                    args = {
+                        'site': 'spoj',
+                        'contest': None,
+                        'problem': testcases_path.split('/')[-1],
+                        'force': True,
+                        'source': problem + '.' + extension
+                    }
+                else:
+                    args = {
+                        'site': testcases_path.split('/')[-3],
+                        'contest': testcases_path.split('/')[-2],
+                        'problem': testcases_path.split('/')[-1],
+                        'force': True,
+                        'source': problem + '.' + extension
+                    }
+            elif args['site'] == 'spoj':
+                args['contest'] = None
+
             Utilities.download_problem_testcases(args)
 
-            print 'Done. Running your solution against sample cases...'
-            Utilities.run_solution(problem + '.' + extension)
+            print 'Running your solution against sample cases...'
+            Utilities.run_solution(args)
 
     @staticmethod
     def get_html(url):
@@ -415,6 +499,12 @@ class Codeforces:
         inputs = soup.findAll('div', {'class': 'input'})
         outputs = soup.findAll('div', {'class': 'output'})
 
+        if len(inputs) == 0 or len(outputs) == 0:
+            print 'Problem not found..'
+            Utilities.handle_kbd_interrupt(
+                self.site, self.contest, self.problem)
+            sys.exit(0)
+
         repls = ('<br>', '\n'), ('<br/>', '\n'), ('</br>', '')
 
         formatted_inputs, formatted_outputs = [], []
@@ -444,6 +534,13 @@ class Codeforces:
         soup = bs(req.text, 'html.parser')
 
         table = soup.find('table', {'class': 'problems'})
+
+        if table is None:
+            print 'Contest not found..'
+            Utilities.handle_kbd_interrupt(
+                self.site, self.contest, self.problem)
+            sys.exit(0)
+
         links = ['http://codeforces.com' +
                  td.find('a')['href'] for td in table.findAll('td', {'class': 'id'})]
 
@@ -522,8 +619,14 @@ class Codechef:
         Method to parse the html and get test cases
         from a codechef problem
         """
-        data = json.loads(req.text)
-        soup = bs(data['body'], 'html.parser')
+        try:
+            data = json.loads(req.text)
+            soup = bs(data['body'], 'html.parser')
+        except (KeyError, ValueError):
+            print 'Problem not found..'
+            Utilities.handle_kbd_interrupt(
+                self.site, self.contest, self.problem)
+            sys.exit(0)
 
         test_cases = soup.findAll('pre')
         formatted_inputs, formatted_outputs = [], []
@@ -564,6 +667,13 @@ class Codechef:
         soup = bs(req.text, 'html.parser')
 
         table = soup.find('table', {'class': 'dataTable'})
+
+        if table is None:
+            print 'Contest not found..'
+            Utilities.handle_kbd_interrupt(
+                self.site, self.contest, self.problem)
+            sys.exit(0)
+
         links = [div.find('a')['href']
                  for div in table.findAll('div', {'class': 'problemname'})]
         links = ['https://codechef.com/api/contests/' + self.contest +
@@ -651,6 +761,13 @@ class Spoj:
         soup = bs(req.text, 'html.parser')
 
         test_cases = soup.findAll('pre')
+
+        if test_cases is None or len(test_cases) == 0:
+            print 'Problem not found..'
+            Utilities.handle_kbd_interrupt(
+                self.site, self.contest, self.problem)
+            sys.exit(0)
+
         formatted_inputs, formatted_outputs = [], []
 
         input_list = [
@@ -711,8 +828,15 @@ class Hackerrank:
         Method to parse the html and get test cases
         from a hackerrank problem
         """
-        data = json.loads(req.text)
-        soup = bs(data['model']['body_html'], 'html.parser')
+
+        try:
+            data = json.loads(req.text)
+            soup = bs(data['model']['body_html'], 'html.parser')
+        except (KeyError, ValueError):
+            print 'Problem not found..'
+            Utilities.handle_kbd_interrupt(
+                self.site, self.contest, self.problem)
+            sys.exit(0)
 
         input_divs = soup.findAll('div', {'class': 'challenge_sample_input'})
         output_divs = soup.findAll('div', {'class': 'challenge_sample_output'})
@@ -759,8 +883,16 @@ class Hackerrank:
         Method to get the links for the problems
         in a given hackerrank contest
         """
-        data = json.loads(req.text)
-        data = data['models']
+
+        try:
+            data = json.loads(req.text)
+            data = data['models']
+        except (KeyError, ValueError):
+            print 'Contest not found..'
+            Utilities.handle_kbd_interrupt(
+                self.site, self.contest, self.problem)
+            sys.exit(0)
+
         links = ['https://www.hackerrank.com/rest/contests/' + self.contest +
                  '/challenges/' + problem['slug'] for problem in data]
 
