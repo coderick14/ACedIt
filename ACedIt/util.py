@@ -278,10 +278,12 @@ class Utilities:
         print 'Done. Exiting gracefully.'
 
     @staticmethod
-    def run_solution(problem):
+    def run_solution(args):
         """
         Method to run and test the user's solution against sample cases
         """
+        problem = args['source']
+
         extension = problem.split('.')[-1]
         problem = problem.split('.')[0]
         problem_path = os.path.join(os.getcwd(), problem)
@@ -290,11 +292,19 @@ class Utilities:
             print 'ERROR : No such file'
             sys.exit(0)
 
-        # For SPOJ, go up two directory levels as it does not have contests
-        up_dir_level = 2 if problem_path.split('/')[-2] == 'spoj' else 3
+        if args['problem']:
+            # Check if problem code has been specified explicitly
+            args['contest'] = '' if args['site'] == 'spoj' else args['contest']
+            testcases_path = os.path.join(Utilities.cache_dir, args['site'], args[
+                                          'contest'], args['problem'])
+        else:
+            # Take arguments from path
 
-        testcases_path = os.path.join(
-            Utilities.cache_dir, *problem_path.split('/')[-up_dir_level:])
+            # For SPOJ, go up two directory levels as it does not have contests
+            up_dir_level = 2 if problem_path.split('/')[-2] == 'spoj' else 3
+
+            testcases_path = os.path.join(
+                Utilities.cache_dir, *problem_path.split('/')[-up_dir_level:])
 
         if os.path.isdir(testcases_path):
             num_cases = len(os.listdir(testcases_path)) / 2
@@ -311,7 +321,7 @@ class Utilities:
                                     Utilities.colors['YELLOW'] + 'TLE' + Utilities.colors['ENDC']]
 
                     elif status == 0:
-
+                        # Ran successfully
                         with open('temp_output' + str(i), 'r') as temp_handler, open(os.path.join(testcases_path, 'Output' + str(i)), 'r') as out_handler:
                             expected_output = out_handler.read().strip().split('\n')
                             user_output = temp_handler.read().strip().split('\n')
@@ -345,6 +355,8 @@ class Utilities:
                     compiler + ' ' + problem_path + '.cpp')
 
                 if compile_status == 0:
+
+                    # Compiled successfully
                     for i in xrange(num_cases):
                         status = os.system('timeout 2s ./a.out < ' + os.path.join(
                             testcases_path, 'Input' + str(i)) + ' > temp_output' + str(i))
@@ -354,7 +366,7 @@ class Utilities:
                                 'YELLOW'] + 'TLE' + Utilities.colors['ENDC']]
 
                         elif status == 0:
-
+                            # Ran successfully
                             with open('temp_output' + str(i), 'r') as temp_handler, open(os.path.join(testcases_path, 'Output' + str(i)), 'r') as out_handler:
                                 expected_output = out_handler.read().strip().split('\n')
                                 user_output = temp_handler.read().strip().split('\n')
@@ -388,7 +400,7 @@ class Utilities:
                     sys.exit(0)
 
             else:
-                print 'Supports only C++ and Python as of now. Support for Java coming soon.'
+                print 'Supports only C, C++ and Python as of now. Support for Java coming soon.'
                 sys.exit(0)
 
             from terminaltables import AsciiTable
@@ -420,26 +432,31 @@ class Utilities:
         else:
             print 'Test cases not found locally...'
 
-            # Handle case for SPOJ specially as it does not have contests
-            if problem_path.split('/')[-2] == 'spoj':
-                args = {
-                    'site': 'spoj',
-                    'contest': None,
-                    'problem': testcases_path.split('/')[-1],
-                    'force': True
-                }
-            else:
-                args = {
-                    'site': testcases_path.split('/')[-3],
-                    'contest': testcases_path.split('/')[-2],
-                    'problem': testcases_path.split('/')[-1],
-                    'force': True
-                }
+            if args['problem'] is None:
+                # Handle case for SPOJ specially as it does not have contests
+                if problem_path.split('/')[-2] == 'spoj':
+                    args = {
+                        'site': 'spoj',
+                        'contest': None,
+                        'problem': testcases_path.split('/')[-1],
+                        'force': True,
+                        'source': problem + '.' + extension
+                    }
+                else:
+                    args = {
+                        'site': testcases_path.split('/')[-3],
+                        'contest': testcases_path.split('/')[-2],
+                        'problem': testcases_path.split('/')[-1],
+                        'force': True,
+                        'source': problem + '.' + extension
+                    }
+            elif args['site'] == 'spoj':
+                args['contest'] = None
 
             Utilities.download_problem_testcases(args)
 
             print 'Running your solution against sample cases...'
-            Utilities.run_solution(problem + '.' + extension)
+            Utilities.run_solution(args)
 
     @staticmethod
     def get_html(url):

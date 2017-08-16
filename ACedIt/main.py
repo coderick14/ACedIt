@@ -10,18 +10,26 @@ def validate_args(args):
     if args['default_site'] is not None or args['workdir'] is not None:
         return
 
-    if args['source'] and (args['contest'] or args['problem'] or args['force']):
-        print 'ACedIt --run <source_file> doesn\'t support other flags'
-        sys.exit(0)
-    elif args['source']:
+    if args['source']:
+        # Check if all flags have been specfied explicitly
+        if (args['site'] == 'spoj' or args['contest']) and args['problem']:
+            return
+
+        # If at least one is specified (but not all), it's not a valid
+        # combination
+        if args['site'] or args['contest'] or args['problem']:
+            print 'ACedIt requires site, contest(not required for SPOJ) and problem explicitly in case workdir structure is not followed.'
+            sys.exit(0)
+
+        # No flags specified, so take arguments from path
         return
 
     if not args['site'] == 'spoj' and args['contest'] is None:
-        print 'Please specify a contest code'
+        print 'Please specify a contest code.'
         sys.exit(0)
 
     if args['site'] == 'spoj' and args['problem'] is None:
-        print 'Please specify a problem code for Spoj'
+        print 'Please specify a problem code for Spoj.'
         sys.exit(0)
 
 
@@ -41,7 +49,7 @@ def main():
 
         elif args['source']:
             # run code
-            util.Utilities.run_solution(args['source'])
+            util.Utilities.run_solution(args)
 
         elif args['problem'] is not None:
             # fetch single problem
