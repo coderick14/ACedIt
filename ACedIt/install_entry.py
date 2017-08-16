@@ -2,6 +2,7 @@ import json
 import os
 from setuptools.command.install import install
 
+
 class InstallEntry(install):
 
     def run(self):
@@ -23,3 +24,4 @@ class InstallEntry(install):
 		        'cachedir': cache_dir}
 		with open(os.path.join(cache_dir, 'constants.json'), 'w') as f:
 		    f.write(json.dumps(data, indent=2))
+		install.run(self)
