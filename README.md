@@ -21,6 +21,8 @@ pip install ACedIt
 ```
 usage: ACedIt [-h] [-s SITE] [-c CONTEST] [-p PROBLEM] [-f]
               [--run SOURCE_FILE]
+              [--set-default-site {codeforces,codechef,hackerrank,spoj}]
+              [--set-workdir WORKDIR]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -33,23 +35,31 @@ optional arguments:
                         The problem code, e.g. OAK, PRMQ etc
   -f, --force           Force download the test cases, even if they are cached
   --run SOURCE_FILE     Name of source file to be run
+  --set-default-site {codeforces,codechef,hackerrank,spoj}
+                        Name of default site to be used when -s flag is not
+                        specified
+  --set-workdir WORKDIR
+                        ABSOLUTE PATH to working directory
 
 ```
+During installation, the default site is set to `codeforces` and the default working directory is set to `/home/your-username/ACedIt`. You can change them anytime using the above mentioned flags.  
 
 ACedIt requires the following working directory structure.
 ```
-root-dir
+workdir
    |
-   |- Site1
-   |    |- Contest1
-   |    |     |- Problem1
-   |    |     |- Problem2
-   |    |- Contest2
-   |    |     |- Problem1
-   |    |     |- Problem2
-   |- Site2
-   |    |- Contest1
-   |    |     |- Problem1
+   |-ACedIt
+   |   |
+   |   |- Site1
+   |   |    |- Contest1
+   |   |    |     |- Problem1
+   |   |    |     |- Problem2
+   |   |    |- Contest2
+   |   |    |     |- Problem1
+   |   |    |     |- Problem2
+   |   |- Site2
+   |   |    |- Contest1
+   |   |    |     |- Problem1
 
 ```
 During installation, ACedIt will set up the basic working directory structure.  

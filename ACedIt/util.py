@@ -28,7 +28,7 @@ class Utilities:
     }
 
     @staticmethod
-    def parse_flags():
+    def parse_flags(supported_sites):
         """
         Utility function to parse command line flags
         """
@@ -56,6 +56,15 @@ class Utilities:
                             dest='source_file',
                             help='Name of source file to be run')
 
+        parser.add_argument('--set-default-site',
+                            dest='default_site',
+                            choices=supported_sites,
+                            help='Name of default site to be used when -s flag is not specified')
+
+        parser.add_argument('--set-workdir',
+                            dest='workdir',
+                            help='ABSOLUTE PATH to working directory')        
+
         parser.set_defaults(force=False)
 
         args = parser.parse_args()
@@ -82,8 +91,38 @@ class Utilities:
         flags['force'] = args.force
         flags['site'] = flags['site'].lower()
         flags['source'] = args.source_file
+        flags['default_site'] = args.default_site
+        flags['workdir'] = args.workdir
 
         return flags
+
+    @staticmethod
+    def set_constants(key, value, supported_sites=None):
+        """
+        Utility method to set default site and working directory
+        """
+        with open(os.path.join(Utilities.cache_dir, 'constants.json'), 'r+') as f:
+            data = f.read()
+            data = json.loads(data)
+            previous_value = data[key]
+            data[key] = value
+            f.seek(0)
+            f.write(json.dumps(data, indent=2))
+            f.truncate()
+
+        print 'Set %s to %s' % (key, value)
+
+        if key == 'workdir':
+            workdir = os.path.join(value, 'ACedIt')
+            previous_path = os.path.join(previous_value, 'ACedIt')
+            for site in supported_sites:
+                if not os.path.isdir(os.path.join(workdir, site)):
+                    os.makedirs(os.path.join(workdir, site))
+            choice = raw_input('Remove all files from previous working directory %s? (y/N) : ' % (previous_path))
+            if choice == 'y':
+                from shutil import rmtree
+                rmtree(previous_path)
+
 
     @staticmethod
     def create_workdir_structure(site, contest):

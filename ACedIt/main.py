@@ -10,6 +10,9 @@ def validate_args(args):
         print 'Sorry. ACedIt only supports %s till now.' % (', '.join(supported_sites))
         sys.exit(0)
 
+    if args['default_site'] is not None or args['workdir'] is not None:
+        return
+
     if args['source'] and (args['contest'] or args['problem'] or args['force']):
         print 'ACedIt --run <source_file> doesn\'t support other flags'
         sys.exit(0)
@@ -26,11 +29,19 @@ def validate_args(args):
 
 
 def main():
-    args = util.Utilities.parse_flags()
+    args = util.Utilities.parse_flags(supported_sites)
     validate_args(args)
 
     try:
-        if args['source']:
+        if args['default_site']:
+            # set default site
+            util.Utilities.set_constants('default_site', args['default_site'])
+
+        if args['workdir']:
+            # set working directory
+            util.Utilities.set_constants('workdir', args['workdir'], supported_sites)
+
+        elif args['source']:
             # run code
             util.Utilities.run_solution(args['source'])
 
@@ -38,7 +49,7 @@ def main():
             # fetch single problem
             util.Utilities.download_problem_testcases(args)
 
-        else:
+        elif args['contest']:
             # fetch all problems for the contest
             util.Utilities.download_contest_testcases(args)
 
