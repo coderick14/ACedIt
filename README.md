@@ -6,6 +6,15 @@
 </h1>
 A command line tool to run your code against sample test cases. Without leaving the terminal :) 
 
+#### Demo
+![ACedIt demo GIF](https://github.com/coderick14/ACedIt/blob/master/images/demo.gif "Simple demo of how ACedIt works" )  
+
+#### Supported sites
++ Codeforces
++ Codechef
++ Spoj
++ Hackerrank
+
 #### Installation
 ##### Build from source
 + `git clone https://github.com/coderick14/ACedIt`
@@ -44,7 +53,7 @@ optional arguments:
 ```
 During installation, the default site is set to `codeforces` and the default working directory is set to `/home/your-username/ACedIt`. You can change them anytime using the above mentioned flags.  
 
-ACedIt requires the following working directory structure.
+ACedIt requires the following working directory structure **(Recommended)**. It also has the added advantage of keeping your work organized :)
 ```
 workdir
    |
@@ -63,14 +72,11 @@ workdir
 
 ```
 During installation, ACedIt will set up the basic working directory structure.  
-While prefetching test cases, it will modify the same accordingly without any user intervention.  
-But in case you're writing your code first and then using `ACedIt --run <source_file>`, make sure you follow the directory structure mentioned.
+While prefetching test cases, it will modify the same accordingly without any user intervention.
 
-#### Supported sites
-+ Codeforces
-+ Codechef
-+ Spoj
-+ Hackerrank
+***But in case you're writing your code in some other directory, you can use `ACedIt --run <SOURCE_FILE> -s SITE -c CONTEST -p PROBLEM`. You can omit `-s` as it'll take the default site.***
+
+***But there's no need to specify the `-s`, `-c` and `-p` flags if you follow the above mentioned directory structure (ACedIt will create most of it for you on the fly :)***
 
 #### Examples
 + Fetch test cases for a single problem  
@@ -85,16 +91,20 @@ ACedIt -s codechef -c AUG17
 ```
 ACedIt -s codeforces -c 86 -p D -f
 ```
-+ Test your code against sample cases  
++ Test your code against sample cases (when following the recommended directory structure)
 ```
 ACedIt --run D.cpp
 ```
 ```
 ACedIt --run CHEFFA.py
 ```
-
-#### Demo
-![ACedIt demo GIF](https://github.com/coderick14/ACedIt/blob/master/images/demo.gif "Simple demo of how ACedIt works" )
++ Test your code against sample cases (from any other directory)
+```
+ACedIt --run solve.cpp -c 835 -p D
+```
+```
+ACedIt --run test.py -s codechef -c AUG17 -p CHEFFA
+```
 
 ##### Note : 
 There might be some issues with Spoj, as they have widely varying DOM trees for different problems. Feel free to contribute on this. Or anything else that you can come up with :)

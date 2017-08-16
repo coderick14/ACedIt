@@ -12,8 +12,21 @@
 
    </h1>
 
-A command line tool to run your code against sample test cases. Without
-leaving the terminal :)
+A command line tool to run your code against sample test cases. Without leaving the terminal :)
+
+Demo
+^^^^
+
+.. figure:: https://github.com/coderick14/ACedIt/blob/master/images/demo.gif
+   :alt: Simple demo of how ACedIt works
+
+Supported sites
+^^^^^^^^^^^^^^^
+
+-  Codeforces
+-  Codechef
+-  Spoj
+-  Hackerrank
 
 Installation
 ^^^^^^^^^^^^
@@ -38,9 +51,9 @@ Usage
 ::
 
     usage: ACedIt [-h] [-s SITE] [-c CONTEST] [-p PROBLEM] [-f]
-              [--run SOURCE_FILE]
-              [--set-default-site {codeforces,codechef,hackerrank,spoj}]
-              [--set-workdir WORKDIR]
+                  [--run SOURCE_FILE]
+                  [--set-default-site {codeforces,codechef,hackerrank,spoj}]
+                  [--set-workdir WORKDIR]
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -59,9 +72,13 @@ Usage
       --set-workdir WORKDIR
                             ABSOLUTE PATH to working directory
 
-During installation, the default site is set to ``codeforces`` and the default working directory is set to ``/home/your-username/ACedIt``. You can change them anytime using the above mentioned flags. 
+During installation, the default site is set to ``codeforces`` and the
+default working directory is set to ``/home/your-username/ACedIt``. You
+can change them anytime using the above mentioned flags.
 
-ACedIt requires the following working directory structure.
+ACedIt requires the following working directory structure
+**(Recommended)**. It also has the added advantage of keeping your work
+organized :)
 
 ::
 
@@ -79,23 +96,14 @@ ACedIt requires the following working directory structure.
        |   |- Site2
        |   |    |- Contest1
        |   |    |     |- Problem1
-      
 
-| During installation, ACedIt will set up the basic working directory
-  structure.
-| While prefetching test cases, it will modify the same accordingly
-  without any user intervention.
-| But in case you’re writing your code first and then using
-  ``ACedIt --run <source_file>``, make sure you follow the directory
-  structure mentioned.
+| During installation, ACedIt will set up the basic working directory structure.
+| While prefetching test cases, it will modify the same accordingly without any user intervention.
 
-Supported sites
-^^^^^^^^^^^^^^^
+But in case you’re writing your code in some other directory, you can use ``ACedIt --run <SOURCE_FILE> -s SITE -c CONTEST -p PROBLEM``. You can omit ``-s`` as it’ll take the default site.
 
--  Codeforces
--  Codechef
--  Spoj
--  Hackerrank
+But there’s no need to specify the ``-s``, ``-c`` and ``-p`` flags if you follow the above mentioned directory structure (ACedIt will create most of it for you on the fly :)
+
 
 Examples
 ^^^^^^^^
@@ -118,7 +126,7 @@ Examples
 
        ACedIt -s codeforces -c 86 -p D -f
 
--  Test your code against sample cases
+-  Test your code against sample cases (when following the recommended directory structure)
 
    ::
 
@@ -128,20 +136,20 @@ Examples
 
        ACedIt --run CHEFFA.py
 
+-  Test your code against sample cases (from any other directory)
 
-Demo
-^^^^
+   ::
 
-.. figure:: https://github.com/coderick14/ACedIt/blob/master/images/demo.gif
-   :alt: Simple demo of how ACedIt works
+       ACedIt --run solve.cpp -c 835 -p D
 
+   ::
+
+       ACedIt --run test.py -s codechef -c AUG17 -p CHEFFA
 
 Note :
 ''''''
 
-There might be some issues with Spoj, as they have widely varying DOM
-trees for different problems. Feel free to contribute on this. Or
-anything else that you can come up with :)
+There might be some issues with Spoj, as they have widely varying DOM trees for different problems. Feel free to contribute on this. Or anything else that you can come up with :)
 
 .. |contributions welcome| image:: https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat
    :target: https://github.com/coderick14/ACedIt/issues
