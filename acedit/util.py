@@ -66,7 +66,12 @@ class Utilities:
                             dest='default_contest',
                             help='Name of default contest to be used when -c flag is not specified')
 
-        parser.set_defaults(force=False)
+        parser.add_argument('--clear-cache',
+                            dest='clear_cache',
+                            action='store_true',
+                            help='Clear cached test cases for a given site. Takes default site if -s flag is omitted')
+
+        parser.set_defaults(force=False, clear_cache=False)
 
         args = parser.parse_args()
 
@@ -94,6 +99,7 @@ class Utilities:
 
         flags['problem'] = args.problem
         flags['force'] = args.force
+        flags['clear_cache'] = args.clear_cache
         flags['source'] = args.source_file
         flags['default_site'] = args.default_site
         flags['default_contest'] = args.default_contest
@@ -137,6 +143,24 @@ class Utilities:
             os.makedirs(os.path.join(Utilities.cache_dir, site,
                                      contest, problem))
             return False
+
+    @staticmethod
+    def clear_cache(site):
+        """
+        Method to clear cached test cases
+        """
+
+        confirm = raw_input(
+            'Remove entire cache for site %s? (y/N) : ' % (site))
+        if confirm == 'y':
+            from shutil import rmtree
+            try:
+                rmtree(os.path.join(Utilities.cache_dir, site))
+            except:
+                print 'Some error occured. Try again.'
+                return
+            os.makedirs(os.path.join(Utilities.cache_dir, site))
+            print 'Done.'
 
     @staticmethod
     def store_files(site, contest, problem, inputs, outputs):

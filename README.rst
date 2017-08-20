@@ -73,6 +73,8 @@ Usage
       --set-default-contest DEFAULT_CONTEST
                             Name of default contest to be used when -c flag is not
                             specified
+      --clear-cache         Clear cached test cases for a given site. Takes
+                            default site if -s flag is omitted
 
 During installation, the default site is set to ``codeforces``. You
 can change it anytime using the above mentioned flags.

@@ -6,8 +6,14 @@ supported_sites = ['codeforces', 'codechef', 'hackerrank', 'spoj']
 
 
 def validate_args(args):
+    """
+    Method to check valid combination of flags
+    """
 
     if args['default_site'] is not None or args['default_contest'] is not None:
+        return
+
+    if args['clear_cache']:
         return
 
     if not args['site'] == 'spoj' and args['contest'] is None:
@@ -31,9 +37,13 @@ def main():
             # set default site
             util.Utilities.set_constants('default_site', args['default_site'])
 
-        if args['default_contest']:
+        elif args['default_contest']:
             # set default contest
             util.Utilities.set_constants('default_contest', args['default_contest'])
+
+        elif args['clear_cache']:
+            # clear cached test cases
+            util.Utilities.clear_cache(args['site'])
 
         elif args['source']:
             # run code
