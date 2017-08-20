@@ -28,14 +28,15 @@ pip install --user ACedIt
 
 #### Usage
 ```
-usage: acedit [-h] [-s SITE] [-c CONTEST] [-p PROBLEM] [-f]
-              [--run SOURCE_FILE]
+usage: acedit [-h] [-s {codeforces,codechef,hackerrank,spoj}] [-c CONTEST]
+              [-p PROBLEM] [-f] [--run SOURCE_FILE]
               [--set-default-site {codeforces,codechef,hackerrank,spoj}]
-              [--set-workdir WORKDIR]
+              [--set-default-contest DEFAULT_CONTEST]
 
 optional arguments:
   -h, --help            show this help message and exit
-  -s SITE, --site SITE  The competitive programming platform, e.g. codeforces,
+  -s {codeforces,codechef,hackerrank,spoj}, --site {codeforces,codechef,hackerrank,spoj}
+                        The competitive programming platform, e.g. codeforces,
                         codechef etc
   -c CONTEST, --contest CONTEST
                         The name of the contest, e.g. JUNE17, LTIME49, COOK83
@@ -47,36 +48,12 @@ optional arguments:
   --set-default-site {codeforces,codechef,hackerrank,spoj}
                         Name of default site to be used when -s flag is not
                         specified
-  --set-workdir WORKDIR
-                        ABSOLUTE PATH to working directory
+  --set-default-contest DEFAULT_CONTEST
+                        Name of default contest to be used when -c flag is not
+                        specified
 
 ```
-During installation, the default site is set to `codeforces` and the default working directory is set to `/home/your-username/ACedIt`. You can change them anytime using the above mentioned flags.  
-
-ACedIt requires the following working directory structure **(Recommended)**. It also has the added advantage of keeping your work organized :)
-```
-workdir
-   |
-   |-ACedIt
-   |   |
-   |   |- Site1
-   |   |    |- Contest1
-   |   |    |     |- Problem1
-   |   |    |     |- Problem2
-   |   |    |- Contest2
-   |   |    |     |- Problem1
-   |   |    |     |- Problem2
-   |   |- Site2
-   |   |    |- Contest1
-   |   |    |     |- Problem1
-
-```
-During installation, ACedIt will set up the basic working directory structure.  
-While prefetching test cases, it will modify the same accordingly without any user intervention.
-
-***But in case you're writing your code in some other directory, you can use `acedit --run <SOURCE_FILE> -s SITE -c CONTEST -p PROBLEM`. You can omit `-s` as it'll take the default site.***
-
-***But there's no need to specify the `-s`, `-c` and `-p` flags if you follow the above mentioned directory structure (ACedIt will create most of it for you on the fly :)***
+During installation, the default site is set to `codeforces`. You can change it anytime using the above mentioned flags.  
 
 #### Examples
 + Fetch test cases for a single problem  
@@ -91,14 +68,15 @@ acedit -s codechef -c AUG17
 ```
 acedit -s codeforces -c 86 -p D -f
 ```
-+ Test your code against sample cases (when following the recommended directory structure)
++ Test your code (when default-site and default-contest is set and filename is same as problem_code)
 ```
 acedit --run D.cpp
 ```
 ```
 acedit --run CHEFFA.py
 ```
-+ Test your code against sample cases (from any other directory)
+**Since your filename is same as problem code, there's no need for the `-p` flag.**
++ Test your code (specifying contest and problem codes explicitly)
 ```
 acedit --run solve.cpp -c 835 -p D
 ```
@@ -106,5 +84,7 @@ acedit --run solve.cpp -c 835 -p D
 acedit --run test.py -s codechef -c AUG17 -p CHEFFA
 ```
 
-##### Note : 
-There might be some issues with Spoj, as they have widely varying DOM trees for different problems. Feel free to contribute on this. Or anything else that you can come up with :)
+##### Note :
++ The working directory structure mentioned in the previous versions is no longer required and supported.
+
++ There might be some issues with Spoj, as they have widely varying DOM trees for different problems. Feel free to contribute on this. Or anything else that you can come up with :)
