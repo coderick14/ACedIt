@@ -7,26 +7,15 @@ supported_sites = ['codeforces', 'codechef', 'hackerrank', 'spoj']
 
 def validate_args(args):
 
-    if args['default_site'] is not None or args['workdir'] is not None:
-        return
-
-    if args['source']:
-        # Check if all flags have been specfied explicitly
-        if (args['site'] == 'spoj' or args['contest']) and args['problem']:
-            return
-
-        # If at least one is specified (but not all), it's not a valid
-        # combination
-        if args['site'] or args['contest'] or args['problem']:
-            print 'ACedIt requires site, contest(not required for SPOJ) and problem explicitly in case workdir structure is not followed.'
-            sys.exit(0)
-
-        # No flags specified, so take arguments from path
+    if args['default_site'] is not None or args['default_contest'] is not None:
         return
 
     if not args['site'] == 'spoj' and args['contest'] is None:
-        print 'Please specify a contest code.'
+        print 'Please specify contest code or set a default contest.'
         sys.exit(0)
+
+    if args['source']:
+        return
 
     if args['site'] == 'spoj' and args['problem'] is None:
         print 'Please specify a problem code for Spoj.'
@@ -42,10 +31,9 @@ def main():
             # set default site
             util.Utilities.set_constants('default_site', args['default_site'])
 
-        if args['workdir']:
-            # set working directory
-            util.Utilities.set_constants(
-                'workdir', args['workdir'], supported_sites)
+        if args['default_contest']:
+            # set default contest
+            util.Utilities.set_constants('default_contest', args['default_contest'])
 
         elif args['source']:
             # run code
@@ -58,6 +46,9 @@ def main():
         elif args['contest']:
             # fetch all problems for the contest
             util.Utilities.download_contest_testcases(args)
+
+        else:
+            print 'Invalid combination of flags.'
 
     except KeyboardInterrupt:
         # Clean up files here

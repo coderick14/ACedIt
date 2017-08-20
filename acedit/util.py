@@ -62,9 +62,9 @@ class Utilities:
                             choices=supported_sites,
                             help='Name of default site to be used when -s flag is not specified')
 
-        parser.add_argument('--set-workdir',
-                            dest='workdir',
-                            help='ABSOLUTE PATH to working directory')
+        parser.add_argument('--set-default-contest',
+                            dest='default_contest',
+                            help='Name of default contest to be used when -c flag is not specified')
 
         parser.set_defaults(force=False)
 
@@ -72,40 +72,42 @@ class Utilities:
 
         flags = {}
 
-        if args.site is None:
+        if args.site is None or args.contest is None:
             import json
-            default_site = None
+            site, contest = None, None
             try:
                 with open(os.path.join(Utilities.cache_dir, 'constants.json'), 'r') as f:
                     data = f.read()
                 data = json.loads(data)
-                default_site = data.get('default_site', None)
+                site = data.get(
+                    'default_site', None) if args.site is None else args.site
+                contest = data.get(
+                    'default_contest', None) if args.contest is None else args.contest
             except:
                 pass
 
-            flags['site'] = default_site
+            flags['site'] = site
+            flags['contest'] = contest if not site == 'spoj' else None
         else:
             flags['site'] = args.site
+            flags['contest'] = args.contest
 
-        flags['contest'] = args.contest
         flags['problem'] = args.problem
         flags['force'] = args.force
-        flags['site'] = flags['site'].lower()
         flags['source'] = args.source_file
         flags['default_site'] = args.default_site
-        flags['workdir'] = args.workdir
+        flags['default_contest'] = args.default_contest
 
         return flags
 
     @staticmethod
-    def set_constants(key, value, supported_sites=None):
+    def set_constants(key, value):
         """
-        Utility method to set default site and working directory
+        Utility method to set default site and contest
         """
         with open(os.path.join(Utilities.cache_dir, 'constants.json'), 'r+') as f:
             data = f.read()
             data = json.loads(data)
-            previous_value = data[key]
             data[key] = value
             f.seek(0)
             f.write(json.dumps(data, indent=2))
@@ -113,48 +115,12 @@ class Utilities:
 
         print 'Set %s to %s' % (key, value)
 
-        if key == 'workdir':
-            workdir = os.path.join(value, 'ACedIt')
-            previous_path = os.path.join(previous_value, 'ACedIt')
-            for site in supported_sites:
-                if not os.path.isdir(os.path.join(workdir, site)):
-                    os.makedirs(os.path.join(workdir, site))
-            choice = raw_input(
-                'Remove all files from previous working directory %s? (y/N) : ' % (previous_path))
-            if choice == 'y':
-                from shutil import rmtree
-                rmtree(previous_path)
-
-    @staticmethod
-    def create_workdir_structure(site, contest):
-        """
-        Method to create the working directory structure
-        """
-
-        # No need to create directories for SPOJ as it does not have contests
-        if site == 'spoj':
-            return
-
-        try:
-            with open(os.path.join(Utilities.cache_dir, 'constants.json'), 'r') as f:
-                data = f.read()
-            data = json.loads(data)
-        except:
-            pass
-
-        workdir = data.get('workdir', None)
-
-        if not os.path.isdir(os.path.join(workdir, site, contest)):
-            os.makedirs(os.path.join(workdir, site, contest))
-
     @staticmethod
     def check_cache(site, contest, problem):
         """
         Method to check if the test cases already exist in cache
         If not, create the directory structure to store test cases
         """
-
-        Utilities.create_workdir_structure(site, contest)
 
         if problem is None:
             if not os.path.isdir(os.path.join(Utilities.cache_dir, site, contest)):
@@ -292,19 +258,11 @@ class Utilities:
             print 'ERROR : No such file'
             sys.exit(0)
 
-        if args['problem']:
-            # Check if problem code has been specified explicitly
-            args['contest'] = '' if args['site'] == 'spoj' else args['contest']
-            testcases_path = os.path.join(Utilities.cache_dir, args['site'], args[
-                                          'contest'], args['problem'])
-        else:
-            # Take arguments from path
+        problem_code = args['problem'] if args['problem'] else problem
+        contest_code = '' if args['site'] == 'spoj' else args['contest']
 
-            # For SPOJ, go up two directory levels as it does not have contests
-            up_dir_level = 2 if problem_path.split('/')[-2] == 'spoj' else 3
-
-            testcases_path = os.path.join(
-                Utilities.cache_dir, *problem_path.split('/')[-up_dir_level:])
+        testcases_path = os.path.join(Utilities.cache_dir, args[
+                                      'site'], contest_code, problem_code)
 
         if os.path.isdir(testcases_path):
             num_cases = len(os.listdir(testcases_path)) / 2
@@ -432,26 +390,9 @@ class Utilities:
         else:
             print 'Test cases not found locally...'
 
-            if args['problem'] is None:
-                # Handle case for SPOJ specially as it does not have contests
-                if problem_path.split('/')[-2] == 'spoj':
-                    args = {
-                        'site': 'spoj',
-                        'contest': None,
-                        'problem': testcases_path.split('/')[-1],
-                        'force': True,
-                        'source': problem + '.' + extension
-                    }
-                else:
-                    args = {
-                        'site': testcases_path.split('/')[-3],
-                        'contest': testcases_path.split('/')[-2],
-                        'problem': testcases_path.split('/')[-1],
-                        'force': True,
-                        'source': problem + '.' + extension
-                    }
-            elif args['site'] == 'spoj':
-                args['contest'] = None
+            args['problem'] = problem_code
+            args['force'] = True
+            args['source'] = problem + '.' + extension
 
             Utilities.download_problem_testcases(args)
 
@@ -750,7 +691,7 @@ class Spoj:
     def __init__(self, args):
         self.site = args['site']
         self.contest = args['contest']
-        self.problem = args['problem']
+        self.problem = args['problem'].upper()
         self.force_download = args['force']
 
     def parse_html(self, req):

@@ -10,6 +10,9 @@ from acedit.install_entry import InstallEntry
 with open('requirements.txt', 'r') as f:
     requirements = [line.strip() for line in f.readlines()]
 
+with open('README.rst', 'rb') as f:
+    long_description = f.read().decode('utf-8')
+
 extra = {}
 if sys.version_info >= (3,):
     extra['use_2to3'] = True
@@ -22,6 +25,8 @@ setup(
     version='1.0.4',
 
     description='Download and test against sample test cases from any competitive programming website',
+
+    long_description=long_description,
 
     author='Deep Bhattacharyya',
 
