@@ -15,6 +15,12 @@ A command line tool to run your code against sample test cases. Without leaving 
 + Spoj
 + Hackerrank
 
+#### Supported Languages
++ C
++ C++
++ Python
++ Java
+
 #### Installation
 ##### Build from source
 + `git clone https://github.com/coderick14/ACedIt`

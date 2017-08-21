@@ -237,13 +237,16 @@ class Utilities:
         return inputs
 
     @staticmethod
-    def cleanup(num_cases):
+    def cleanup(num_cases, basename, extension):
         """
         Method to clean up temporarily created files
         """
         for i in xrange(num_cases):
             if os.path.isfile('temp_output' + str(i)):
                 os.remove('temp_output' + str(i))
+
+        if extension == 'java':
+            os.system('rm ' + basename + '*.class')
 
     @staticmethod
     def handle_kbd_interrupt(site, contest, problem):
@@ -276,6 +279,7 @@ class Utilities:
 
         extension = problem.split('.')[-1]
         problem = problem.split('.')[0]
+        basename = problem.split('/')[-1]
         problem_path = os.path.join(os.getcwd(), problem)
 
         if not os.path.isfile(problem_path + '.' + extension):
@@ -296,7 +300,7 @@ class Utilities:
 
                 for i in xrange(num_cases):
                     status = os.system('cat ' + os.path.join(testcases_path, 'Input' + str(
-                        i)) + ' | timeout 3s python ' + problem + '.py > temp_output' + str(i))
+                        i)) + ' | timeout 3s python \'' + problem_path + '.py\' > temp_output' + str(i))
                     if status == 124:
                         # Time Limit Exceeded
                         results += [Utilities.colors['BOLD'] +
@@ -330,17 +334,18 @@ class Utilities:
                         results += [Utilities.colors['BOLD'] +
                                     Utilities.colors['RED'] + 'RTE' + Utilities.colors['ENDC']]
 
-            elif extension == 'cpp' or extension == 'c':
+            elif extension in ['c', 'cpp', 'java']:
 
-                compiler = {'c': 'gcc', 'cpp': 'g++'}[extension]
+                compiler = {'c': 'gcc', 'cpp': 'g++', 'java': 'javac -d .'}[extension]
+                execute_command = {'c': './a.out', 'cpp': './a.out', 'java': 'java ' + basename}[extension]
                 compile_status = os.system(
-                    compiler + ' ' + problem_path + '.cpp')
+                    compiler + ' \'' + problem_path + '.' + extension + '\'')
 
                 if compile_status == 0:
 
                     # Compiled successfully
                     for i in xrange(num_cases):
-                        status = os.system('timeout 2s ./a.out < ' + os.path.join(
+                        status = os.system('timeout 2s ' + execute_command + ' < ' + os.path.join(
                             testcases_path, 'Input' + str(i)) + ' > temp_output' + str(i))
                         if status == 124:
                             # Time Limit Exceeded
@@ -382,7 +387,7 @@ class Utilities:
                     sys.exit(0)
 
             else:
-                print 'Supports only C, C++ and Python as of now. Support for Java coming soon.'
+                print 'Supports only C, C++, Python and Java as of now.'
                 sys.exit(0)
 
             from terminaltables import AsciiTable
@@ -409,7 +414,7 @@ class Utilities:
             print table.table
 
             # Clean up temporary files
-            Utilities.cleanup(num_cases)
+            Utilities.cleanup(num_cases, basename, extension)
 
         else:
             print 'Test cases not found locally...'

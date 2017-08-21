@@ -28,6 +28,14 @@ Supported sites
 -  Spoj
 -  Hackerrank
 
+Supported languages
+^^^^^^^^^^^^^^^^^^^
+
+-  C
+-  C++
+-  Python
+-  Java
+
 Installation
 ^^^^^^^^^^^^
 
