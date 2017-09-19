@@ -7,7 +7,8 @@ try:
     import requests as rq
     import grequests as grq
     from argparse import ArgumentParser
-except:
+except ImportError as e:
+    print e
     err = """
     You haven't installed the required dependencies.
     Run 'python setup.py install' to install the dependencies.
@@ -296,50 +297,29 @@ class Utilities:
             num_cases = len(os.listdir(testcases_path)) / 2
             results, expected_outputs, user_outputs = [], [], []
 
-            if extension == 'py':
+            if extension in ['c', 'cpp', 'java', 'py', 'hs']:
 
-                for i in xrange(num_cases):
-                    status = os.system('cat ' + os.path.join(testcases_path, 'Input' + str(
-                        i)) + ' | timeout 3s python \'' + problem_path + '.py\' > temp_output' + str(i))
-                    if status == 124:
-                        # Time Limit Exceeded
-                        results += [Utilities.colors['BOLD'] +
-                                    Utilities.colors['YELLOW'] + 'TLE' + Utilities.colors['ENDC']]
-
-                    elif status == 0:
-                        # Ran successfully
-                        with open('temp_output' + str(i), 'r') as temp_handler, open(os.path.join(testcases_path, 'Output' + str(i)), 'r') as out_handler:
-                            expected_output = out_handler.read().strip().split('\n')
-                            user_output = temp_handler.read().strip().split('\n')
-
-                            expected_output = '\n'.join(
-                                [line.strip() for line in expected_output])
-                            user_output = '\n'.join(
-                                [line.strip() for line in user_output])
-
-                            expected_outputs += [expected_output]
-                            user_outputs += [user_output]
-
-                        if expected_output == user_output:
-                            # All Correct
-                            results += [Utilities.colors['BOLD'] + Utilities.colors[
-                                'GREEN'] + 'AC' + Utilities.colors['ENDC']]
-                        else:
-                            # Wrong Answer
-                            results += [Utilities.colors['BOLD'] +
-                                        Utilities.colors['RED'] + 'WA' + Utilities.colors['ENDC']]
-
-                    else:
-                        # Runtime Error
-                        results += [Utilities.colors['BOLD'] +
-                                    Utilities.colors['RED'] + 'RTE' + Utilities.colors['ENDC']]
-
-            elif extension in ['c', 'cpp', 'java']:
-
-                compiler = {'c': 'gcc', 'cpp': 'g++', 'java': 'javac -d .'}[extension]
-                execute_command = {'c': './a.out', 'cpp': './a.out', 'java': 'java ' + basename}[extension]
-                compile_status = os.system(
-                    compiler + ' \'' + problem_path + '.' + extension + '\'')
+                compiler = {
+                    'hs': 'ghc --make -O -dynamic -o ' + basename,
+                    'py': None,
+                    'rb': None,
+                    'c': 'gcc -static -DONLINE_JUDGE -fno-asm -lm -s -O2 -o ' + basename,
+                    'cpp': 'g++ -static -DONLINE_JUDGE -lm -s -x c++ -O2 -std=c++14 -o ' + basename,
+                    'java': 'javac -d .'
+                }[extension]
+                print compiler
+                execute_command = {
+                    'py': 'python ' + basename + '.' + extension,
+                    'rb': 'ruby ' + basename + '.' + extension,
+                    'hs': './' + basename,
+                    'c': './' + basename,
+                    'cpp': './' + basename,
+                    'java': 'java -DONLINE_JUDGE=true -Duser.language=en -Duser.region=US -Duser.variant=US ' + basename
+                }[extension]
+                if compiler is None:
+                    compile_status = 0
+                else:
+                    compile_status = os.system(compiler + ' \'' + problem_path + '.' + extension + '\'')
 
                 if compile_status == 0:
 
@@ -395,6 +375,13 @@ class Utilities:
                            'Expected Output', 'Your Output', 'Result']]
 
             inputs = Utilities.input_file_to_string(testcases_path, num_cases)
+
+            if len(expected_outputs) == 0:
+                # Compilation error occurred
+                message = Utilities.colors['BOLD'] + Utilities.colors[
+                    'RED'] + 'Something bad happened. Not run against test cases' + Utilities.colors['ENDC'] + '.'
+                print message
+                sys.exit(0)
 
             for i in xrange(num_cases):
 
