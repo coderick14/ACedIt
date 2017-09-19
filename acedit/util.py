@@ -7,8 +7,7 @@ try:
     import requests as rq
     import grequests as grq
     from argparse import ArgumentParser
-except ImportError as e:
-    print e
+except:
     err = """
     You haven't installed the required dependencies.
     Run 'python setup.py install' to install the dependencies.
