@@ -376,13 +376,6 @@ class Utilities:
 
             inputs = Utilities.input_file_to_string(testcases_path, num_cases)
 
-            # if len(expected_outputs) == 0:
-                # Compilation error occurred
-                # message = Utilities.colors['BOLD'] + Utilities.colors[
-                    # 'RED'] + 'Something bad happened. Not run against test cases' + Utilities.colors['ENDC'] + '.'
-                # print message
-                # sys.exit(0)
-
             for i in xrange(num_cases):
 
                 row = [
