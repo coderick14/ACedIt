@@ -26,6 +26,12 @@ class Utilities:
         'ENDC': '\033[0m',
         'BOLD': '\033[1m',
     }
+    verdicts = {
+        'AC': colors['BOLD'] + colors['GREEN'] + 'AC' + colors['ENDC'],
+        'WA': colors['BOLD'] + colors['RED'] + 'WA' + colors['ENDC'],
+        'RTE': colors['BOLD'] + colors['RED'] + 'RTE' + colors['ENDC'],
+        'TLE': colors['BOLD'] + colors['YELLOW'] + 'TLE' + colors['ENDC']
+    }
 
     @staticmethod
     def parse_flags(supported_sites):
@@ -52,6 +58,11 @@ class Utilities:
                             dest='force',
                             action='store_true',
                             help='Force download the test cases, even if they are cached')
+
+        parser.add_argument('--add-test',
+                            dest='add_test',
+                            action='store_true',
+                            help='Add test to specific problem of contest')
 
         parser.add_argument('--run',
                             dest='source_file',
@@ -103,6 +114,7 @@ class Utilities:
         flags['source'] = args.source_file
         flags['default_site'] = args.default_site
         flags['default_contest'] = args.default_contest
+        flags['add_test'] = args.add_test
 
         return flags
 
@@ -163,6 +175,30 @@ class Utilities:
             print 'Done.'
 
     @staticmethod
+    def get_long_input(message):
+        print message
+        lines = []
+        while True:
+            try:
+                line = raw_input()
+                if line == '' and len(lines) > 0 and lines[-1] == '':
+                    break
+            except EOFError:
+                lines.append('')
+                break
+            lines.append(line)
+        return '\n'.join(lines)
+
+    @staticmethod
+    def add_test(args):
+        print 'Adding new test to %s (contest: %s, problem: %s)' % (args['site'], args['contest'], args['problem'])
+        inputs = [Utilities.get_long_input('Specify input (^D or two consecutive empty lines to stop):')]
+        outputs = [Utilities.get_long_input('Specify output (^D or two consecutive empty lines to stop):')]
+        is_in_cache = Utilities.check_cache(args['site'], args['contest'], args['problem'])
+        Utilities.store_files(args['site'], args['contest'], args['problem'], inputs, outputs)
+        print 'Test is successfully added'
+
+    @staticmethod
     def store_files(site, contest, problem, inputs, outputs):
         """
         Method to store the test cases in files
@@ -170,33 +206,36 @@ class Utilities:
 
         # Handle case for SPOJ specially as it does not have contests
         contest = '' if site == 'spoj' else contest
+        testcases_path = os.path.join(Utilities.cache_dir, site, contest, problem)
+        num_cases = len(os.listdir(testcases_path)) / 2
 
         for i, inp in enumerate(inputs):
-            filename = os.path.join(
-                Utilities.cache_dir, site, contest, problem, 'Input' + str(i))
+            filename = os.path.join(testcases_path, 'Input' + str(i + num_cases))
             with open(filename, 'w') as handler:
                 handler.write(inp)
 
         for i, out in enumerate(outputs):
-            filename = os.path.join(
-                Utilities.cache_dir, site, contest, problem, 'Output' + str(i))
+            filename = os.path.join(testcases_path, 'Output' + str(i + num_cases))
             with open(filename, 'w') as handler:
                 handler.write(out)
+
+    @staticmethod
+    def get_platform(args):
+        if args['site'] == 'codeforces':
+            return Codeforces(args)
+        elif args['site'] == 'codechef':
+            return Codechef(args)
+        elif args['site'] == 'spoj':
+            return Spoj(args)
+        else:
+            return Hackerrank(args)
 
     @staticmethod
     def download_problem_testcases(args):
         """
         Download test cases for a given problem
         """
-        if args['site'] == 'codeforces':
-            platform = Codeforces(args)
-        elif args['site'] == 'codechef':
-            platform = Codechef(args)
-        elif args['site'] == 'spoj':
-            platform = Spoj(args)
-        else:
-            platform = Hackerrank(args)
-
+        platform = Utilities.get_platform(args)
         is_in_cache = Utilities.check_cache(
             platform.site, platform.contest, platform.problem)
 
@@ -211,13 +250,7 @@ class Utilities:
         """
         Download test cases for all problems in a given contest
         """
-        if args['site'] == 'codeforces':
-            platform = Codeforces(args)
-        elif args['site'] == 'codechef':
-            platform = Codechef(args)
-        elif args['site'] == 'hackerrank':
-            platform = Hackerrank(args)
-
+        platform = Utilities.get_platform(args)
         Utilities.check_cache(
             platform.site, platform.contest, platform.problem)
 
@@ -271,6 +304,36 @@ class Utilities:
         print 'Done. Exiting gracefully.'
 
     @staticmethod
+    def run_command_on_one_test(testcases_path, testcase_number, execute_command):
+        status = os.system('timeout 2s ' + execute_command + ' < ' + os.path.join(
+            testcases_path, 'Input' + str(testcase_number)) + ' > temp_output' + str(testcase_number))
+        user_output = ''
+        with open(os.path.join(testcases_path, 'Output' + str(testcase_number)), 'r') as out_handler:
+            expected_output = out_handler.read().strip().split('\n')
+            expected_output = '\n'.join([line.strip() for line in expected_output])
+            if status == 124:
+                # Time Limit Exceeded
+                results = Utilities.verdicts['TLE']
+
+            elif status == 0:
+                # Ran successfully
+                with open('temp_output' + str(testcase_number), 'r') as temp_handler:
+                    user_output = temp_handler.read().strip().split('\n')
+                    user_output = '\n'.join([line.strip() for line in user_output])
+
+                if expected_output == user_output:
+                    # All Correct
+                    results = Utilities.verdicts['AC']
+                else:
+                    # Wrong Answer
+                    results = Utilities.verdicts['WA']
+
+            else:
+                # Runtime Error
+                results = Utilities.verdicts['RTE']
+        return (expected_output, user_output, results)
+
+    @staticmethod
     def run_solution(args):
         """
         Method to run and test the user's solution against sample cases
@@ -294,91 +357,36 @@ class Utilities:
 
         if os.path.isdir(testcases_path):
             num_cases = len(os.listdir(testcases_path)) / 2
-            results, expected_outputs, user_outputs = [], [], []
+            results, expected_outputs, user_outputs = [''] * num_cases, [''] * num_cases, [''] * num_cases
 
-            if extension == 'py':
+            if extension in ['c', 'cpp', 'java', 'py', 'hs', 'rb']:
 
-                for i in xrange(num_cases):
-                    status = os.system('cat ' + os.path.join(testcases_path, 'Input' + str(
-                        i)) + ' | timeout 3s python \'' + problem_path + '.py\' > temp_output' + str(i))
-                    if status == 124:
-                        # Time Limit Exceeded
-                        results += [Utilities.colors['BOLD'] +
-                                    Utilities.colors['YELLOW'] + 'TLE' + Utilities.colors['ENDC']]
-
-                    elif status == 0:
-                        # Ran successfully
-                        with open('temp_output' + str(i), 'r') as temp_handler, open(os.path.join(testcases_path, 'Output' + str(i)), 'r') as out_handler:
-                            expected_output = out_handler.read().strip().split('\n')
-                            user_output = temp_handler.read().strip().split('\n')
-
-                            expected_output = '\n'.join(
-                                [line.strip() for line in expected_output])
-                            user_output = '\n'.join(
-                                [line.strip() for line in user_output])
-
-                            expected_outputs += [expected_output]
-                            user_outputs += [user_output]
-
-                        if expected_output == user_output:
-                            # All Correct
-                            results += [Utilities.colors['BOLD'] + Utilities.colors[
-                                'GREEN'] + 'AC' + Utilities.colors['ENDC']]
-                        else:
-                            # Wrong Answer
-                            results += [Utilities.colors['BOLD'] +
-                                        Utilities.colors['RED'] + 'WA' + Utilities.colors['ENDC']]
-
-                    else:
-                        # Runtime Error
-                        results += [Utilities.colors['BOLD'] +
-                                    Utilities.colors['RED'] + 'RTE' + Utilities.colors['ENDC']]
-
-            elif extension in ['c', 'cpp', 'java']:
-
-                compiler = {'c': 'gcc', 'cpp': 'g++', 'java': 'javac -d .'}[extension]
-                execute_command = {'c': './a.out', 'cpp': './a.out', 'java': 'java ' + basename}[extension]
-                compile_status = os.system(
-                    compiler + ' \'' + problem_path + '.' + extension + '\'')
+                compiler = {
+                    'hs': 'ghc --make -O -dynamic -o ' + basename,
+                    'py': None,
+                    'rb': None,
+                    'c': 'gcc -static -DONLINE_JUDGE -fno-asm -lm -s -O2 -o ' + basename,
+                    'cpp': 'g++ -static -DONLINE_JUDGE -lm -s -x c++ -O2 -std=c++14 -o ' + basename,
+                    'java': 'javac -d .'
+                }[extension]
+                execute_command = {
+                    'py': 'python ' + basename + '.' + extension,
+                    'rb': 'ruby ' + basename + '.' + extension,
+                    'hs': './' + basename,
+                    'c': './' + basename,
+                    'cpp': './' + basename,
+                    'java': 'java -DONLINE_JUDGE=true -Duser.language=en -Duser.region=US -Duser.variant=US ' + basename
+                }[extension]
+                if compiler is None:
+                    compile_status = 0
+                else:
+                    compile_status = os.system(compiler + ' \'' + problem_path + '.' + extension + '\'')
 
                 if compile_status == 0:
 
                     # Compiled successfully
                     for i in xrange(num_cases):
-                        status = os.system('timeout 2s ' + execute_command + ' < ' + os.path.join(
-                            testcases_path, 'Input' + str(i)) + ' > temp_output' + str(i))
-                        if status == 124:
-                            # Time Limit Exceeded
-                            results += [Utilities.colors['BOLD'] + Utilities.colors[
-                                'YELLOW'] + 'TLE' + Utilities.colors['ENDC']]
-
-                        elif status == 0:
-                            # Ran successfully
-                            with open('temp_output' + str(i), 'r') as temp_handler, open(os.path.join(testcases_path, 'Output' + str(i)), 'r') as out_handler:
-                                expected_output = out_handler.read().strip().split('\n')
-                                user_output = temp_handler.read().strip().split('\n')
-
-                                expected_output = '\n'.join(
-                                    [line.strip() for line in expected_output])
-                                user_output = '\n'.join(
-                                    [line.strip() for line in user_output])
-
-                                expected_outputs += [expected_output]
-                                user_outputs += [user_output]
-
-                            if expected_output == user_output:
-                                # All Correct
-                                results += [Utilities.colors['BOLD'] + Utilities.colors[
-                                    'GREEN'] + 'AC' + Utilities.colors['ENDC']]
-                            else:
-                                # Wrong Answer
-                                results += [Utilities.colors['BOLD'] + Utilities.colors[
-                                    'RED'] + 'WA' + Utilities.colors['ENDC']]
-
-                        else:
-                            # Runtime Error
-                            results += [Utilities.colors['BOLD'] +
-                                        Utilities.colors['RED'] + 'RTE' + Utilities.colors['ENDC']]
+                        expected_outputs[i], user_outputs[i], results[i] = Utilities.run_command_on_one_test(testcases_path, i, execute_command)
                 else:
                     # Compilation error occurred
                     message = Utilities.colors['BOLD'] + Utilities.colors[

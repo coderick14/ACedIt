@@ -16,6 +16,10 @@ def validate_args(args):
     if args['clear_cache']:
         return
 
+    if args['add_test'] and (not args['contest'] and args['site'] != 'spoj' or not args['problem']):
+        print 'Please specify contest and problem code'
+        sys.exit(0)
+
     if not args['site'] == 'spoj' and args['contest'] is None:
         print 'Please specify contest code or set a default contest.'
         sys.exit(0)
@@ -36,6 +40,10 @@ def main():
         if args['default_site']:
             # set default site
             util.Utilities.set_constants('default_site', args['default_site'])
+
+        elif args['add_test']:
+            # adding test
+            util.Utilities.add_test(args)
 
         elif args['default_contest']:
             # set default contest
