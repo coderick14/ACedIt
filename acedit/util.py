@@ -53,6 +53,11 @@ class Utilities:
                             action='store_true',
                             help='Force download the test cases, even if they are cached')
 
+        parser.add_argument('--add-test',
+                            dest='add_test',
+                            action='store_true',
+                            help='Add test to specific problem of contest')
+
         parser.add_argument('--run',
                             dest='source_file',
                             help='Name of source file to be run')
@@ -103,6 +108,7 @@ class Utilities:
         flags['source'] = args.source_file
         flags['default_site'] = args.default_site
         flags['default_contest'] = args.default_contest
+        flags['add_test'] = args.add_test
 
         return flags
 
@@ -163,6 +169,28 @@ class Utilities:
             print 'Done.'
 
     @staticmethod
+    def get_long_input(message):
+        print message
+        lines = []
+        while True:
+            try:
+                line = raw_input()
+                if line == '' and len(lines) > 0 and lines[-1] == '':
+                    break
+            except EOFError:
+                lines.append('')
+                break
+            lines.append(line)
+        return '\n'.join(lines)
+
+    @staticmethod
+    def add_test(args):
+        inputs = [Utilities.get_long_input('Specify input (^D or two consecutive empty lines to stop):')]
+        outputs = [Utilities.get_long_input('Specify output (^D or two consecutive empty lines to stop):')]
+        is_in_cache = Utilities.check_cache(args['site'], args['contest'], args['problem'])
+        Utilities.store_files(args['site'], args['contest'], args['problem'], inputs, outputs)
+
+    @staticmethod
     def store_files(site, contest, problem, inputs, outputs):
         """
         Method to store the test cases in files
@@ -170,33 +198,36 @@ class Utilities:
 
         # Handle case for SPOJ specially as it does not have contests
         contest = '' if site == 'spoj' else contest
+        testcases_path = os.path.join(Utilities.cache_dir, site, contest, problem)
+        num_cases = len(os.listdir(testcases_path)) / 2
 
         for i, inp in enumerate(inputs):
-            filename = os.path.join(
-                Utilities.cache_dir, site, contest, problem, 'Input' + str(i))
+            filename = os.path.join(testcases_path, 'Input' + str(i + num_cases))
             with open(filename, 'w') as handler:
                 handler.write(inp)
 
         for i, out in enumerate(outputs):
-            filename = os.path.join(
-                Utilities.cache_dir, site, contest, problem, 'Output' + str(i))
+            filename = os.path.join(testcases_path, 'Output' + str(i + num_cases))
             with open(filename, 'w') as handler:
                 handler.write(out)
+
+    @staticmethod
+    def get_platform(args):
+        if args['site'] == 'codeforces':
+            return Codeforces(args)
+        elif args['site'] == 'codechef':
+            return Codechef(args)
+        elif args['site'] == 'spoj':
+            return Spoj(args)
+        else:
+            return Hackerrank(args)
 
     @staticmethod
     def download_problem_testcases(args):
         """
         Download test cases for a given problem
         """
-        if args['site'] == 'codeforces':
-            platform = Codeforces(args)
-        elif args['site'] == 'codechef':
-            platform = Codechef(args)
-        elif args['site'] == 'spoj':
-            platform = Spoj(args)
-        else:
-            platform = Hackerrank(args)
-
+        platform = Utilities.get_platform(args)
         is_in_cache = Utilities.check_cache(
             platform.site, platform.contest, platform.problem)
 
@@ -211,13 +242,7 @@ class Utilities:
         """
         Download test cases for all problems in a given contest
         """
-        if args['site'] == 'codeforces':
-            platform = Codeforces(args)
-        elif args['site'] == 'codechef':
-            platform = Codechef(args)
-        elif args['site'] == 'hackerrank':
-            platform = Hackerrank(args)
-
+        platform = Utilities.get_platform(args)
         Utilities.check_cache(
             platform.site, platform.contest, platform.problem)
 
@@ -330,7 +355,6 @@ class Utilities:
                             expected_output = '\n'.join(
                                 [line.strip() for line in expected_output])
                             expected_outputs += [expected_output]
-
                             if status == 124:
                                 # Time Limit Exceeded
                                 results += [Utilities.colors['BOLD'] + Utilities.colors[
