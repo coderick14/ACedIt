@@ -296,17 +296,16 @@ class Utilities:
             num_cases = len(os.listdir(testcases_path)) / 2
             results, expected_outputs, user_outputs = [], [], []
 
-            if extension in ['c', 'cpp', 'java', 'py', 'hs']:
+            if extension in ['c', 'cpp', 'java', 'py', 'hs', 'rb']:
 
                 compiler = {
                     'hs': 'ghc --make -O -dynamic -o ' + basename,
                     'py': None,
                     'rb': None,
                     'c': 'gcc -static -DONLINE_JUDGE -fno-asm -lm -s -O2 -o ' + basename,
-                    'cpp': 'g++ -static -DONLINE_JUDGE -lm -s -x c++ -O2 -std=c++14 -o ' + basename,
+                    'cpp': 'clang++ -static -DONLINE_JUDGE -lm -s -x c++ -O2 -std=c++14 -o ' + basename,
                     'java': 'javac -d .'
                 }[extension]
-                print compiler
                 execute_command = {
                     'py': 'python ' + basename + '.' + extension,
                     'rb': 'ruby ' + basename + '.' + extension,
