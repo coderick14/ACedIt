@@ -325,38 +325,40 @@ class Utilities:
                     for i in xrange(num_cases):
                         status = os.system('timeout 2s ' + execute_command + ' < ' + os.path.join(
                             testcases_path, 'Input' + str(i)) + ' > temp_output' + str(i))
-                        if status == 124:
-                            # Time Limit Exceeded
-                            results += [Utilities.colors['BOLD'] + Utilities.colors[
-                                'YELLOW'] + 'TLE' + Utilities.colors['ENDC']]
+                        with open(os.path.join(testcases_path, 'Output' + str(i)), 'r') as out_handler:
+                            expected_output = out_handler.read().strip().split('\n')
+                            expected_output = '\n'.join(
+                                [line.strip() for line in expected_output])
+                            expected_outputs += [expected_output]
 
-                        elif status == 0:
-                            # Ran successfully
-                            with open('temp_output' + str(i), 'r') as temp_handler, open(os.path.join(testcases_path, 'Output' + str(i)), 'r') as out_handler:
-                                expected_output = out_handler.read().strip().split('\n')
-                                user_output = temp_handler.read().strip().split('\n')
-
-                                expected_output = '\n'.join(
-                                    [line.strip() for line in expected_output])
-                                user_output = '\n'.join(
-                                    [line.strip() for line in user_output])
-
-                                expected_outputs += [expected_output]
-                                user_outputs += [user_output]
-
-                            if expected_output == user_output:
-                                # All Correct
+                            if status == 124:
+                                # Time Limit Exceeded
                                 results += [Utilities.colors['BOLD'] + Utilities.colors[
-                                    'GREEN'] + 'AC' + Utilities.colors['ENDC']]
+                                    'YELLOW'] + 'TLE' + Utilities.colors['ENDC']]
+                                user_outputs += ['']
+
+                            elif status == 0:
+                                # Ran successfully
+                                with open('temp_output' + str(i), 'r') as temp_handler:
+                                    user_output = temp_handler.read().strip().split('\n')
+                                    user_output = '\n'.join(
+                                        [line.strip() for line in user_output])
+                                    user_outputs += [user_output]
+
+                                if expected_output == user_output:
+                                    # All Correct
+                                    results += [Utilities.colors['BOLD'] + Utilities.colors[
+                                        'GREEN'] + 'AC' + Utilities.colors['ENDC']]
+                                else:
+                                    # Wrong Answer
+                                    results += [Utilities.colors['BOLD'] + Utilities.colors[
+                                        'RED'] + 'WA' + Utilities.colors['ENDC']]
+
                             else:
-                                # Wrong Answer
-                                results += [Utilities.colors['BOLD'] + Utilities.colors[
-                                    'RED'] + 'WA' + Utilities.colors['ENDC']]
-
-                        else:
-                            # Runtime Error
-                            results += [Utilities.colors['BOLD'] +
-                                        Utilities.colors['RED'] + 'RTE' + Utilities.colors['ENDC']]
+                                # Runtime Error
+                                results += [Utilities.colors['BOLD'] +
+                                            Utilities.colors['RED'] + 'RTE' + Utilities.colors['ENDC']]
+                                user_outputs += ['']
                 else:
                     # Compilation error occurred
                     message = Utilities.colors['BOLD'] + Utilities.colors[
@@ -374,12 +376,12 @@ class Utilities:
 
             inputs = Utilities.input_file_to_string(testcases_path, num_cases)
 
-            if len(expected_outputs) == 0:
+            # if len(expected_outputs) == 0:
                 # Compilation error occurred
-                message = Utilities.colors['BOLD'] + Utilities.colors[
-                    'RED'] + 'Something bad happened. Not run against test cases' + Utilities.colors['ENDC'] + '.'
-                print message
-                sys.exit(0)
+                # message = Utilities.colors['BOLD'] + Utilities.colors[
+                    # 'RED'] + 'Something bad happened. Not run against test cases' + Utilities.colors['ENDC'] + '.'
+                # print message
+                # sys.exit(0)
 
             for i in xrange(num_cases):
 
