@@ -20,6 +20,8 @@ A command line tool to run your code against sample test cases. Without leaving 
 + C++
 + Python
 + Java
++ Ruby
++ Haskell
 
 #### Installation
 ##### Build from source
@@ -96,3 +98,7 @@ acedit --run test.py -s codechef -c AUG17 -p CHEFFA
 + The working directory structure mentioned in the previous versions is no longer required and supported.
 
 + There might be some issues with Spoj, as they have widely varying DOM trees for different problems. Feel free to contribute on this. Or anything else that you can come up with :)
+
+##### Contributors
++ [Lakshmanaram](https://github.com/lakshmanaram)
++ [Igor Kolobov](https://github.com/Igorjan94)
