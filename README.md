@@ -20,6 +20,8 @@ A command line tool to run your code against sample test cases. Without leaving 
 + C++
 + Python
 + Java
++ Ruby
++ Haskell
 
 #### Installation
 ##### Build from source

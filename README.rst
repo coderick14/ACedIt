@@ -1,24 +1,4 @@
-|contributions welcome| |Open Source Love| |MIT Licence|
-
-.. raw:: html
-
-   <h1 align="center">
-
-.. raw:: html
-
-    <img src="https://github.com/coderick14/ACedIt/blob/master/images/logo.png" width="500"/><br/>
-
-.. raw:: html
-
-   </h1>
-
 A command line tool to run your code against sample test cases. Without leaving the terminal :)
-
-Demo
-^^^^
-
-.. figure:: https://github.com/coderick14/ACedIt/blob/master/images/demo.gif
-   :alt: Simple demo of how ACedIt works
 
 Supported sites
 ^^^^^^^^^^^^^^^
@@ -35,6 +15,8 @@ Supported languages
 -  C++
 -  Python
 -  Java
+-  Ruby
+-  Haskell
 
 Installation
 ^^^^^^^^^^^^
@@ -137,10 +119,3 @@ Note :
 -  The working directory structure mentioned in the previous versions is no longer required and supported.
 
 -  There might be some issues with Spoj, as they have widely varying DOM trees for different problems. Feel free to contribute on this. Or anything else that you can come up with :)
-
-.. |contributions welcome| image:: https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat
-   :target: https://github.com/coderick14/ACedIt/issues
-.. |Open Source Love| image:: https://badges.frapsoft.com/os/v2/open-source.svg?v=103
-   :target: https://github.com/coderick14/ACedIt/
-.. |MIT Licence| image:: https://badges.frapsoft.com/os/mit/mit.svg?v=103
-   :target: https://opensource.org/licenses/mit-license.php
