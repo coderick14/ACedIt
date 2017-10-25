@@ -528,8 +528,8 @@ class Codeforces:
         Method to scrape a single problem from codeforces
         """
         print 'Fetching problem ' + self.contest + '-' + self.problem + ' from Codeforces...'
-        url = 'http://codeforces.com/contest/' + \
-            self.contest + '/problem/' + self.problem
+        type = 'contest' if int(self.contest) <= 100000 else 'gym'
+        url = 'http://codeforces.com/%s/%s/problem/%s' % (type, self.contest, self.problem)
         req = Utilities.get_html(url)
         inputs, outputs = self.parse_html(req)
         Utilities.store_files(self.site, self.contest,
@@ -541,7 +541,8 @@ class Codeforces:
         Method to scrape all problems from a given codeforces contest
         """
         print 'Checking problems available for contest ' + self.contest + '...'
-        url = 'http://codeforces.com/contest/' + self.contest
+        type = 'contest' if int(self.contest) <= 100000 else 'gym'
+        url = 'http://codeforces.com/%s/%s' % (type, self.contest)
         req = Utilities.get_html(url)
         links = self.get_problem_links(req)
 
