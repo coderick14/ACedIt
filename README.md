@@ -1,6 +1,6 @@
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/coderick14/ACedIt/issues)
-[![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.svg?v=103)](https://github.com/coderick14/ACedIt/) 
-[![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
+[![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.png?v=103)](https://github.com/coderick14/ACedIt)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <h1 align="center">
     <img src="https://github.com/coderick14/ACedIt/blob/master/images/logo.png" width="500"/><br/>
 </h1>
@@ -10,7 +10,7 @@ A command line tool to run your code against sample test cases. Without leaving 
 ![ACedIt demo GIF](https://github.com/coderick14/ACedIt/blob/master/images/demo.gif "Simple demo of how ACedIt works" )  
 
 #### Supported sites
-+ Codeforces
++ Codeforces (including gyms)
 + Codechef
 + Spoj
 + Hackerrank
@@ -39,7 +39,7 @@ pip install --user ACedIt
 usage: acedit [-h] [-s {codeforces,codechef,hackerrank,spoj}] [-c CONTEST]
               [-p PROBLEM] [-f] [--run SOURCE_FILE]
               [--set-default-site {codeforces,codechef,hackerrank,spoj}]
-              [--set-default-contest DEFAULT_CONTEST]
+              [--set-default-contest DEFAULT_CONTEST] [--clear-cache]
 
 optional arguments:
   -h, --help            show this help message and exit
