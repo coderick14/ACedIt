@@ -194,6 +194,8 @@ class Utilities:
             platform = Codechef(args)
         elif args['site'] == 'spoj':
             platform = Spoj(args)
+        elif args['site'] == 'atcoder':
+            platform = AtCoder(args)
         else:
             platform = Hackerrank(args)
 
@@ -306,7 +308,7 @@ class Utilities:
                     'py': None,
                     'rb': None,
                     'c': 'gcc -static -DONLINE_JUDGE -fno-asm -lm -s -O2 -o ' + basename,
-                    'cpp': 'g++ -static -DONLINE_JUDGE -lm -s -x c++ -O2 -std=c++14 -o ' + basename,
+                    'cpp': 'g++ -Wall -O3 -mtune=native -march=native -o ' + basename,
                     'java': 'javac -d .'
                 }[extension]
 
@@ -998,7 +1000,7 @@ class AtCoder:
 
     def scrape_problem(self):
         """
-        Method to scrape a single problem from codeforces
+        Method to scrape a single problem from atcoder
         """
         print('Fetching problem ' + self.contest + '-' + self.problem + ' from AtCoder...')
         url = 'https://beta.atcoder.jp/contests/%s/tasks' % self.contest
