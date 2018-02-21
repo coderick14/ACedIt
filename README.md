@@ -10,6 +10,7 @@ A command line tool to run your code against sample test cases. Without leaving 
 ![ACedIt demo GIF](https://github.com/coderick14/ACedIt/blob/master/images/demo.gif "Simple demo of how ACedIt works" )  
 
 #### Supported sites
++ AtCoder
 + Codeforces (including gyms)
 + Codechef
 + Spoj
@@ -24,16 +25,11 @@ A command line tool to run your code against sample test cases. Without leaving 
 + Haskell
 
 #### Installation
-##### Build from source
 + `brew install coreutils`
 + `git clone https://github.com/kotapiku/ACedIt`
 + `cd ACedIt`
 + `python setup.py install`
 
-##### As a Python package
-```
-pip install --user ACedIt
-```
 
 #### Usage
 ```
@@ -64,7 +60,7 @@ optional arguments:
                         default site if -s flag is omitted
 
 ```
-During installation, the default site is set to `codeforces`. You can change it anytime using the above mentioned flags.  
+During installation, the default site is set to `AtCoder`. You can change it anytime using the above mentioned flags.  
 
 #### Examples
 + Fetch test cases for a single problem  

@@ -7,7 +7,7 @@ class InstallEntry(install):
 
     def run(self):
 
-        default_site = 'codeforces'
+        default_site = 'atcoder'
         cache_dir = os.path.join(os.path.expanduser('~'), '.cache', 'ACedIt')
 
         from acedit.main import supported_sites
