@@ -10,7 +10,7 @@ class InstallEntry(install):
         default_site = 'codeforces'
         cache_dir = os.path.join(os.path.expanduser('~'), '.cache', 'ACedIt')
 
-        from main import supported_sites
+        from acedit.main import supported_sites
 
         for site in supported_sites:
                 # create cache directory structure
