@@ -77,15 +77,14 @@ acedit -s atcoder -c abc088 -p a -f
 ```
 + Test your code (when default-site and default-contest is set and filename is same as problem_code)
 ```
+acedit --set-default-contest abc088 // set contest
+acedit  // fetch data
 acedit --run a.cpp
-```
-```
-acedit --run a.py -c abc088
 ```
 **Since your filename is same as problem code, there's no need for the `-p` flag.**
 + Test your code (specifying contest and problem codes explicitly)
 ```
-acedit --run solve.cpp -c 835 -p D
+acedit --run d.cpp -c abc084 -p d
 ```
 ```
 acedit --run test.py -s codechef -c AUG17 -p CHEFFA
