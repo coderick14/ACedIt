@@ -987,7 +987,7 @@ class AtCoder:
         for response in responses:
             if response is not None and response.status_code == 200:
                 inputs, outputs = self.parse_html(response)
-                self.problem = response.url.split('/')[-1]
+                self.problem = response.url.split('/')[-1][-1]
                 Utilities.check_cache(self.site, self.contest, self.problem)
                 Utilities.store_files(
                     self.site, self.contest, self.problem, inputs, outputs)
