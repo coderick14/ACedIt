@@ -65,22 +65,22 @@ During installation, the default site is set to `AtCoder`. You can change it any
 #### Examples
 + Fetch test cases for a single problem  
 ```
-acedit -s codechef -c AUG17 -p CHEFFA
+acedit -s atcoder -c abc088 -p a
 ```
 + Fetch test cases for all problems in a contest  
 ```
-acedit -s codechef -c AUG17
+acedit -s atcoder -c abc088
 ```
 + Force download test cases, even when they are cached  
 ```
-acedit -s codeforces -c 86 -p D -f
+acedit -s atcoder -c abc088 -p a -f
 ```
 + Test your code (when default-site and default-contest is set and filename is same as problem_code)
 ```
-acedit --run D.cpp
+acedit --run a.cpp
 ```
 ```
-acedit --run CHEFFA.py
+acedit --run a.py -c abc088
 ```
 **Since your filename is same as problem code, there's no need for the `-p` flag.**
 + Test your code (specifying contest and problem codes explicitly)
