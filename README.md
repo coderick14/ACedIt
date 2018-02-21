@@ -25,7 +25,8 @@ A command line tool to run your code against sample test cases. Without leaving 
 
 #### Installation
 ##### Build from source
-+ `git clone https://github.com/coderick14/ACedIt`
++ `brew install coreutils`
++ `git clone https://github.com/kotapiku/ACedIt`
 + `cd ACedIt`
 + `python setup.py install`
 
