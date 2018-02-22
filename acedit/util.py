@@ -251,6 +251,8 @@ class Utilities:
 
         if extension == 'java':
             os.system('rm ' + basename + '*.class')
+        if extension == 'cpp':
+            os.system('rm ' + basename)
 
     @staticmethod
     def handle_kbd_interrupt(site, contest, problem):
@@ -971,7 +973,7 @@ class AtCoder:
                 self.site, self.contest, self.problem)
             sys.exit(0)
 
-        links = ['http://%s.contest.atcoder.jp' % "abc087" +
+        links = ['http://%s.contest.atcoder.jp' % self.contest +
                  td.find('a')['href'] for td in soup.findAll('td', {'class': 'center'})]
 
         return links
@@ -998,6 +1000,7 @@ class AtCoder:
             if response is not None and response.status_code == 200:
                 inputs, outputs = self.parse_html(response)
                 self.problem = self.get_problem_name(response)
+                print(self.problem)
                 Utilities.check_cache(self.site, self.contest, self.problem)
                 Utilities.store_files(
                     self.site, self.contest, self.problem, inputs, outputs)
