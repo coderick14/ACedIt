@@ -29,10 +29,15 @@ A command line tool to run your code against sample test cases. Without leaving 
 + coreutils (macOS only)
 
 #### Installation
-+ `git clone https://github.com/kotapiku/ACedIt`
+##### Build from source
++ `git clone https://github.com/coderick14/ACedIt`
 + `cd ACedIt`
 + `python setup.py install`
 
+##### As a Python package
+```
+pip install --user ACedIt
+```
 
 #### Usage
 ```
@@ -63,31 +68,32 @@ optional arguments:
                         default site if -s flag is omitted
 
 ```
-During installation, the default site is set to `AtCoder`. You can change it anytime using the above mentioned flags.  
+During installation, the default site is set to `codeforces`. You can change it anytime using the above mentioned flags.  
 
 #### Examples
 + Fetch test cases for a single problem  
 ```
-acedit -s atcoder -c abc088 -p a
+acedit -s codechef -c AUG17 -p CHEFFA
 ```
 + Fetch test cases for all problems in a contest  
 ```
-acedit -s atcoder -c abc088
+acedit -s codechef -c AUG17
 ```
 + Force download test cases, even when they are cached  
 ```
-acedit -s atcoder -c abc088 -p a -f
+acedit -s codeforces -c 86 -p D -f
 ```
 + Test your code (when default-site and default-contest is set and filename is same as problem_code)
 ```
-acedit --set-default-contest abc088 // set contest
-acedit  // fetch data
-acedit --run a.cpp
+acedit --run D.cpp
+```
+```
+acedit --run CHEFFA.py
 ```
 **Since your filename is same as problem code, there's no need for the `-p` flag.**
 + Test your code (specifying contest and problem codes explicitly)
 ```
-acedit --run d.cpp -c abc084 -p d
+acedit --run solve.cpp -c 835 -p D
 ```
 ```
 acedit --run test.py -s codechef -c AUG17 -p CHEFFA
