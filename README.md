@@ -24,8 +24,11 @@ A command line tool to run your code against sample test cases. Without leaving 
 + Ruby
 + Haskell
 
+#### Requirements
++ python3.5
++ coreutils (macOS only)
+
 #### Installation
-+ `brew install coreutils`
 + `git clone https://github.com/kotapiku/ACedIt`
 + `cd ACedIt`
 + `python setup.py install`
