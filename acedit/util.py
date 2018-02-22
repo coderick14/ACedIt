@@ -916,7 +916,7 @@ class Hackerrank:
 
 class AtCoder:
     """
-    Class to handle downloading of test cases from AtCoder
+    Class to handle downloading of test cases from atcoder
     """
 
     def __init__(self, args):
@@ -928,7 +928,7 @@ class AtCoder:
     def parse_html(self, req):
         """
         Method to parse the html and get test cases
-        from a codeforces problem
+        from a atcoder problem
         """
         soup = bs(req.text, 'html.parser')
 
@@ -959,7 +959,7 @@ class AtCoder:
     def get_problem_links(self, req):
         """
         Method to get the links for the problems
-        in a given codeforces contest
+        in a given atcoder contest
         """
         soup = bs(req.text, 'html.parser')
 
@@ -971,10 +971,18 @@ class AtCoder:
                 self.site, self.contest, self.problem)
             sys.exit(0)
 
-        links = ['http://beta.atcoder.jp' +
-                 td.find('a')['href'] for td in soup.findAll('td', {'class': 'text-center no-break'})]
+        links = ['http://%s.contest.atcoder.jp' % "abc087" +
+                 td.find('a')['href'] for td in soup.findAll('td', {'class': 'center'})]
 
         return links
+
+    def get_problem_name(self, req):
+        """
+        Method to get the names for the problems
+        in a given atcoder contest
+        """
+        soup = bs(req.text, 'html.parser')
+        return soup.find('title').get_text()[0].lower()
 
     def handle_batch_requests(self, links):
         """
@@ -989,7 +997,7 @@ class AtCoder:
         for response in responses:
             if response is not None and response.status_code == 200:
                 inputs, outputs = self.parse_html(response)
-                self.problem = response.url.split('/')[-1][-1]
+                self.problem = self.get_problem_name(response)
                 Utilities.check_cache(self.site, self.contest, self.problem)
                 Utilities.store_files(
                     self.site, self.contest, self.problem, inputs, outputs)
@@ -1003,7 +1011,8 @@ class AtCoder:
         Method to scrape a single problem from atcoder
         """
         print('Fetching problem ' + self.contest + '-' + self.problem + ' from AtCoder...')
-        url = 'https://beta.atcoder.jp/contests/%s/tasks' % self.contest
+        url = 'https://%s.contest.atcoder.jp/assignments/' % self.contest
+
         req = Utilities.get_html(url)
         inputs, outputs = self.parse_html(req)
         Utilities.store_files(self.site, self.contest,
@@ -1015,7 +1024,7 @@ class AtCoder:
         Method to scrape all problems from a given codeforces contest
         """
         print('Checking problems available for contest ' + self.contest + '...')
-        url = 'https://beta.atcoder.jp/contests/%s/tasks' % self.contest
+        url = 'https://%s.contest.atcoder.jp/assignments/' % self.contest
         req = Utilities.get_html(url)
         links = self.get_problem_links(req)
 
