@@ -333,8 +333,12 @@ class Utilities:
 
                     # Compiled successfully
                     for i in range(num_cases):
-                        status = os.system('gtimeout 2s ' + execute_command + ' < ' + os.path.join(
-                            testcases_path, 'Input' + str(i)) + ' > temp_output' + str(i))
+                        if platform.system() == 'Linux':
+                            status = os.system('timeout 2s ' + execute_command + ' < ' + os.path.join(
+                                testcases_path, 'Input' + str(i)) + ' > temp_output' + str(i))
+                        else:
+                            status = os.system('gtimeout 2s ' + execute_command + ' < ' + os.path.join(
+                                testcases_path, 'Input' + str(i)) + ' > temp_output' + str(i))
 
                         with open(os.path.join(testcases_path, 'Output' + str(i)), 'r') as out_handler:
                             expected_output = out_handler.read().strip().split('\n')

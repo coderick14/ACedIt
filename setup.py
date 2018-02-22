@@ -50,7 +50,7 @@ setup(
     },
 
     classifiers=[
-        'Operating System :: POSIX :: MacOs',
+        'Operating System :: MacOS',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.5',
         'Topic :: Education',
