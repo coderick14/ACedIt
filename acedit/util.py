@@ -1,8 +1,10 @@
+# coding: utf-8
 import sys
 import json
 import re
 import os
 import functools
+import platform
 try:
     from bs4 import BeautifulSoup as bs
     import requests as rq
@@ -428,6 +430,7 @@ class Utilities:
         """
         Utility function get the html content of an url
         """
+        sys.setrecursionlimit(10000)
         MAX_TRIES = 3
         try:
             for try_count in range(MAX_TRIES):
@@ -438,6 +441,7 @@ class Utilities:
                 print('Could not fetch content. Please try again.')
                 sys.exit(0)
         except Exception as e:
+            print(url,e)
             print('Please check your internet connection and try again.')
             sys.exit(0)
         return r
@@ -1004,7 +1008,6 @@ class AtCoder:
             if response is not None and response.status_code == 200:
                 inputs, outputs = self.parse_html(response)
                 self.problem = self.get_problem_name(response)
-                print(self.problem)
                 Utilities.check_cache(self.site, self.contest, self.problem)
                 Utilities.store_files(
                     self.site, self.contest, self.problem, inputs, outputs)
