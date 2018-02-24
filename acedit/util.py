@@ -953,11 +953,17 @@ class AtCoder:
                 pre = inp.find('pre').decode_contents()
                 pre = functools.reduce(lambda a, kv: a.replace(*kv), repls, pre)
                 pre = re.sub('<[^<]+?>', '', pre)
+                pre = pre.replace("&amp;", "&")
+                pre = pre.replace("&lt;", "<")
+                pre = pre.replace("&gt;", ">")
                 formatted_inputs += [pre]
             if inp.find('section').find('h3').text[:3] == "出力例":
                 pre = inp.find('pre').decode_contents()
                 pre = functools.reduce(lambda a, kv: a.replace(*kv), repls, pre)
                 pre = re.sub('<[^<]+?>', '', pre)
+                pre = pre.replace("&amp;", "&")
+                pre = pre.replace("&lt;", "<")
+                pre = pre.replace("&gt;", ">")
                 formatted_outputs += [pre]
 
 
