@@ -441,7 +441,6 @@ class Utilities:
                 print('Could not fetch content. Please try again.')
                 sys.exit(0)
         except Exception as e:
-            print(url,e)
             print('Please check your internet connection and try again.')
             sys.exit(0)
         return r
@@ -948,6 +947,8 @@ class AtCoder:
 
         formatted_inputs, formatted_outputs = [], []
 
+        inouts = filter((lambda x: x.find('section') and x.find('section').find('h3')), inouts)
+
         for inp in inouts:
             if inp.find('section').find('h3').text[:3] == "入力例":
                 pre = inp.find('pre').decode_contents()
@@ -965,10 +966,6 @@ class AtCoder:
                 pre = pre.replace("&lt;", "<")
                 pre = pre.replace("&gt;", ">")
                 formatted_outputs += [pre]
-
-
-        # print 'Inputs', formatted_inputs
-        # print 'Outputs', formatted_outputs
 
         return formatted_inputs, formatted_outputs
 
