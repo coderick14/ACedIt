@@ -984,8 +984,8 @@ class AtCoder:
                 self.site, self.contest, self.problem)
             sys.exit(0)
 
-        links = ['http://%s.contest.atcoder.jp' % self.contest +
-                 td.find('a')['href'] for td in soup.findAll('td', {'class': 'center'})]
+        links = ['http://beta.atcoder.jp' +
+                 td.find('a')['href'] for td in soup.findAll('td', {'class': 'text-center no-break'})]
 
         return links
 
@@ -1024,7 +1024,7 @@ class AtCoder:
         Method to scrape a single problem from atcoder
         """
         print('Fetching problem ' + self.contest + '-' + self.problem + ' from AtCoder...')
-        url = 'https://%s.contest.atcoder.jp/assignments/' % self.contest
+        url = 'https://beta.atcoder.jp/contests/%s/tasks/' % self.contest
 
         req = Utilities.get_html(url)
         inputs, outputs = self.parse_html(req)
@@ -1037,7 +1037,7 @@ class AtCoder:
         Method to scrape all problems from a given codeforces contest
         """
         print('Checking problems available for contest ' + self.contest + '...')
-        url = 'https://%s.contest.atcoder.jp/assignments/' % self.contest
+        url = 'https://beta.atcoder.jp/contests/%s/tasks/' % self.contest
         req = Utilities.get_html(url)
         links = self.get_problem_links(req)
 
