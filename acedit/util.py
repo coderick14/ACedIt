@@ -1024,7 +1024,7 @@ class AtCoder:
         Method to scrape a single problem from atcoder
         """
         print('Fetching problem ' + self.contest + '-' + self.problem + ' from AtCoder...')
-        url = 'https://beta.atcoder.jp/contests/%s/tasks/' % self.contest
+        url = 'https://beta.atcoder.jp/contests/%s/tasks/%s' % (self.contest, self.problem)
 
         req = Utilities.get_html(url)
         inputs, outputs = self.parse_html(req)
