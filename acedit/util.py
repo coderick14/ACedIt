@@ -366,7 +366,7 @@ class Utilities:
                     'py': None,
                     'rb': None,
                     'c': 'gcc -static -DONLINE_JUDGE -fno-asm -lm -s -O2 -o ' + basename,
-                    'cpp': 'g++ -static -DONLINE_JUDGE -lm -s -x c++ -O2 -std=c++14 -o ' + basename,
+                    'cpp': 'clang++ -static -DONLINE_JUDGE -lm -s -x c++ -include /home/igorjan/206round/bits.h -O2 -std=c++17 -o ' + basename,
                     'java': 'javac -d .'
                 }[extension]
                 execute_command = {
