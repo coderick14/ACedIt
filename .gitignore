@@ -5,3 +5,4 @@ venv/
 *.egg-info
 *.egg
 constants.json
+.python-version

@@ -14,6 +14,7 @@ A command line tool to run your code against sample test cases. Without leaving 
 + Codechef
 + Spoj
 + Hackerrank
++ AtCoder
 
 #### Supported Languages
 + C
@@ -22,6 +23,10 @@ A command line tool to run your code against sample test cases. Without leaving 
 + Java
 + Ruby
 + Haskell
+
+#### Requirements
++ python3.5
++ coreutils (macOS only)
 
 #### Installation
 ##### Build from source
@@ -102,3 +107,4 @@ acedit --run test.py -s codechef -c AUG17 -p CHEFFA
 ##### Contributors
 + [Lakshmanaram](https://github.com/lakshmanaram)
 + [Igor Kolobov](https://github.com/Igorjan94)
++ [Mayuko Kori](https://github.com/kotapiku)
