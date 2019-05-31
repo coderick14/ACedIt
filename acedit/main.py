@@ -1,8 +1,8 @@
 import sys
-import util
+import acedit.util as util
 
 
-supported_sites = ['codeforces', 'codechef', 'hackerrank', 'spoj']
+supported_sites = ['codeforces', 'codechef', 'hackerrank', 'spoj', 'atcoder']
 
 
 def validate_args(args):
@@ -17,14 +17,14 @@ def validate_args(args):
         return
 
     if not args['site'] == 'spoj' and args['contest'] is None:
-        print 'Please specify contest code or set a default contest.'
+        print('Please specify contest code or set a default contest.')
         sys.exit(0)
 
     if args['source']:
         return
 
     if args['site'] == 'spoj' and args['problem'] is None:
-        print 'Please specify a problem code for Spoj.'
+        print('Please specify a problem code for Spoj.')
         sys.exit(0)
 
 
@@ -58,7 +58,7 @@ def main():
             util.Utilities.download_contest_testcases(args)
 
         else:
-            print 'Invalid combination of flags.'
+            print('Invalid combination of flags.')
 
     except KeyboardInterrupt:
         # Clean up files here

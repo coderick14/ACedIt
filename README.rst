@@ -7,6 +7,7 @@ Supported sites
 -  Codechef
 -  Spoj
 -  Hackerrank
+- Atcoder
 
 Supported languages
 ^^^^^^^^^^^^^^^^^^^

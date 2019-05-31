@@ -22,7 +22,7 @@ setup(
 
     packages=['acedit'],
 
-    version='1.1.1',
+    version='1.2.0',
 
     description='Download and test against sample test cases from any competitive programming website',
 
@@ -31,6 +31,8 @@ setup(
     author='Deep Bhattacharyya',
 
     author_email='bhattacharyya.rick14@gmail.com',
+
+    python_requires='>=3.5',
 
     install_requires=requirements,
 
@@ -51,8 +53,9 @@ setup(
 
     classifiers=[
         'Operating System :: POSIX :: Linux',
+        'Operating System :: MacOS',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Education',
     ],
 
