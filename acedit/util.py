@@ -359,14 +359,15 @@ class Utilities:
             num_cases = len(os.listdir(testcases_path)) / 2
             results, expected_outputs, user_outputs = [''] * num_cases, [''] * num_cases, [''] * num_cases
 
-            if extension in ['c', 'cpp', 'java', 'py', 'hs', 'rb']:
+            if extension in ['c', 'cpp', 'java', 'py', 'hs', 'rb', 'kt']:
 
                 compiler = {
                     'hs': 'ghc --make -O -dynamic -o ' + basename,
                     'py': None,
                     'rb': None,
                     'c': 'gcc -static -DONLINE_JUDGE -fno-asm -lm -s -O2 -o ' + basename,
-                    'cpp': 'clang++ -static -DONLINE_JUDGE -lm -s -x c++ -include /home/igorjan/206round/bits.h -O2 -std=c++17 -o ' + basename,
+                    'cpp': 'clang++ -DONLINE_JUDGE -lm -s -x c++ -include /home/igorjan/206round/bits.h -O2 -std=c++17 -o ' + basename,
+                    'kt': 'kotlinc -d .',
                     'java': 'javac -d .'
                 }[extension]
                 execute_command = {
@@ -375,6 +376,7 @@ class Utilities:
                     'hs': './' + basename,
                     'c': './' + basename,
                     'cpp': './' + basename,
+                    'kt': 'kotlin -DONLINE_JUDGE=true -Duser.language=en -Duser.region=US -Duser.variant=US ' + basename + 'Kt',
                     'java': 'java -DONLINE_JUDGE=true -Duser.language=en -Duser.region=US -Duser.variant=US ' + basename
                 }[extension]
                 if compiler is None:
@@ -395,7 +397,7 @@ class Utilities:
                     sys.exit(0)
 
             else:
-                print 'Supports only C, C++, Python and Java as of now.'
+                print 'Supports only C, C++, Python, Kotlin  and Java as of now.'
                 sys.exit(0)
 
             from terminaltables import AsciiTable
