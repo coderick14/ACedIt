@@ -489,17 +489,17 @@ class Codeforces:
 
         formatted_inputs, formatted_outputs = [], []
 
-        for inp in inputs:
+        def getContent(inp):
             pre = inp.find('pre').decode_contents()
             pre = reduce(lambda a, kv: a.replace(*kv), repls, pre)
             pre = re.sub('<[^<]+?>', '', pre)
-            formatted_inputs += [pre]
+            return re.sub(r'^\s*', '', pre)
+
+        for inp in inputs:
+            formatted_inputs += [getContent(inp)]
 
         for out in outputs:
-            pre = out.find('pre').decode_contents()
-            pre = reduce(lambda a, kv: a.replace(*kv), repls, pre)
-            pre = re.sub('<[^<]+?>', '', pre)
-            formatted_outputs += [pre]
+            formatted_outputs += [getContent(out)]
 
         # print 'Inputs', formatted_inputs
         # print 'Outputs', formatted_outputs
