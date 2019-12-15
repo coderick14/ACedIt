@@ -5,10 +5,10 @@ import re
 import os
 import functools
 import platform
+import threading
 try:
     from bs4 import BeautifulSoup as bs
     import requests as rq
-    import grequests as grq
     from argparse import ArgumentParser
 except:
     err = """
@@ -443,16 +443,99 @@ class Utilities:
         return r
 
 
-class Codeforces:
+class Platform:
+    """
+    Base class for platforms
+    """
+    def __init__(self, args):
+        self.site = args['site']
+        self.contest = args['contest']
+        self.force_download = args['force']
+        self.responses = []
+        self.lock = threading.Lock()
+
+    def get_problem_name(self, response):
+        return response.url.split('/')[-1]
+
+    def build_problem_url(self):
+        raise NotImplementedError
+
+    def parse_html(self):
+        raise NotImplementedError
+
+    def scrape_problem(self):
+        """
+        Method to scrape a single problem
+        """
+        contest = '' if self.site == 'spoj' else self.contest
+        print('Fetching problem %s-%s from %s...' % (contest, self.problem, self.site))
+        req = Utilities.get_html(self.build_problem_url())
+        inputs, outputs = self.parse_html(req)
+        Utilities.store_files(self.site, self.contest,
+                              self.problem, inputs, outputs)
+        print('Done.')
+
+    def fetch_html(self, link):
+        r = rq.get(link)
+        with self.lock:
+            self.responses += [r]
+
+
+    def handle_batch_requests(self, links):
+        """
+        Method to send simultaneous requests to all problem pages
+        """
+        threads = [threading.Thread(target=self.fetch_html, args=(link,)) for link in links]
+
+        for t in threads:
+            t.start()
+
+        for t in threads:
+            t.join()
+
+        failed_requests = []
+
+        for response in self.responses:
+            if response is not None and response.status_code == 200:
+                inputs, outputs = self.parse_html(response)
+                self.problem = self.get_problem_name(response)
+                Utilities.check_cache(self.site, self.contest, self.problem)
+                Utilities.store_files(
+                    self.site, self.contest, self.problem, inputs, outputs)
+            else:
+                failed_requests += [response.url]
+
+        return failed_requests
+
+    def scrape_contest(self):
+        """
+        Method to scrape all problems from a given contest
+        """
+        print('Checking problems available for contest %s-%s...' % (self.site, self.contest))
+        req = Utilities.get_html(self.build_contest_url())
+        links = self.get_problem_links(req)
+
+        print('Found %d problems..' % (len(links)))
+
+        if not self.force_download:
+            cached_problems = os.listdir(os.path.join(
+                Utilities.cache_dir, self.site, self.contest))
+            links = [link for link in links if link.split(
+                '/')[-1] not in cached_problems]
+
+        failed_requests = self.handle_batch_requests(links)
+        if len(failed_requests) > 0:
+            self.handle_batch_requests(failed_requests)
+
+
+class Codeforces(Platform):
     """
     Class to handle downloading of test cases from Codeforces
     """
 
     def __init__(self, args):
-        self.site = args['site']
-        self.contest = args['contest']
         self.problem = args['problem']
-        self.force_download = args['force']
+        super(Codeforces, self).__init__(args)
 
     def parse_html(self, req):
         """
@@ -511,74 +594,23 @@ class Codeforces:
 
         return links
 
-    def handle_batch_requests(self, links):
-        """
-        Method to send simultaneous requests to
-        all problem pages
-        """
-        rs = (grq.get(link) for link in links)
-        responses = grq.map(rs)
+    def build_problem_url(self):
+        contest_type = 'contest' if int(self.contest) <= 100000 else 'gym'
+        return 'http://codeforces.com/%s/%s/problem/%s' % (contest_type, self.contest, self.problem)
 
-        failed_requests = []
-
-        for response in responses:
-            if response is not None and response.status_code == 200:
-                inputs, outputs = self.parse_html(response)
-                self.problem = response.url.split('/')[-1]
-                Utilities.check_cache(self.site, self.contest, self.problem)
-                Utilities.store_files(
-                    self.site, self.contest, self.problem, inputs, outputs)
-            else:
-                failed_requests += [response.url]
-
-        return failed_requests
-
-    def scrape_problem(self):
-        """
-        Method to scrape a single problem from codeforces
-        """
-        print('Fetching problem ' + self.contest + '-' + self.problem + ' from Codeforces...')
-        type = 'contest' if int(self.contest) <= 100000 else 'gym'
-        url = 'http://codeforces.com/%s/%s/problem/%s' % (type, self.contest, self.problem)
-        req = Utilities.get_html(url)
-        inputs, outputs = self.parse_html(req)
-        Utilities.store_files(self.site, self.contest,
-                              self.problem, inputs, outputs)
-        print('Done.')
-
-    def scrape_contest(self):
-        """
-        Method to scrape all problems from a given codeforces contest
-        """
-        print('Checking problems available for contest ' + self.contest + '...')
-        type = 'contest' if int(self.contest) <= 100000 else 'gym'
-        url = 'http://codeforces.com/%s/%s' % (type, self.contest)
-        req = Utilities.get_html(url)
-        links = self.get_problem_links(req)
-
-        print('Found %d problems..' % (len(links)))
-
-        if not self.force_download:
-            cached_problems = os.listdir(os.path.join(
-                Utilities.cache_dir, self.site, self.contest))
-            links = [link for link in links if link.split(
-                '/')[-1] not in cached_problems]
-
-        failed_requests = self.handle_batch_requests(links)
-        if len(failed_requests) > 0:
-            self.handle_batch_requests(failed_requests)
+    def build_contest_url(self):
+        contest_type = 'contest' if int(self.contest) <= 100000 else 'gym'
+        return 'http://codeforces.com/%s/%s' % (contest_type, self.contest)
 
 
-class Codechef:
+class Codechef(Platform):
     """
     Class to handle downloading of test cases from Codechef
     """
 
     def __init__(self, args):
-        self.site = args['site']
-        self.contest = args['contest']
         self.problem = args['problem']
-        self.force_download = args['force']
+        super(Codechef, self).__init__(args)
 
     def parse_html(self, req):
         """
@@ -647,77 +679,21 @@ class Codechef:
 
         return links
 
-    def handle_batch_requests(self, links):
-        """
-        Method to send simultaneous requests to
-        all problem pages
-        """
-        rs = (grq.get(link) for link in links)
-        responses = grq.map(rs)
+    def build_problem_url(self):
+        return 'https://codechef.com/api/contests/%s/problems/%s' % (self.contest, self.problem)
 
-        # responses = []
-        # for link in links:
-        #     responses += [rq.get(link)]
-
-        failed_requests = []
-
-        for response in responses:
-            if response is not None and response.status_code == 200:
-                inputs, outputs = self.parse_html(response)
-                self.problem = response.url.split('/')[-1]
-                Utilities.check_cache(self.site, self.contest, self.problem)
-                Utilities.store_files(
-                    self.site, self.contest, self.problem, inputs, outputs)
-            else:
-                failed_requests += [response.url]
-
-        return failed_requests
-
-    def scrape_problem(self):
-        """
-        Method to scrape a single problem from codechef
-        """
-        print('Fetching problem ' + self.contest + '-' + self.problem + ' from Codechef...')
-        url = 'https://codechef.com/api/contests/' + \
-            self.contest + '/problems/' + self.problem
-        req = Utilities.get_html(url)
-        inputs, outputs = self.parse_html(req)
-        Utilities.store_files(self.site, self.contest,
-                              self.problem, inputs, outputs)
-        print('Done.')
-
-    def scrape_contest(self):
-        """
-        Method to scrape all problems from a given codechef contest
-        """
-        print('Checking problems available for contest ' + self.contest + '...')
-        url = 'https://codechef.com/' + self.contest
-        req = Utilities.get_html(url)
-        links = self.get_problem_links(req)
-
-        print('Found %d problems..' % (len(links)))
-
-        if not self.force_download:
-            cached_problems = os.listdir(os.path.join(
-                Utilities.cache_dir, self.site, self.contest))
-            links = [link for link in links if link.split(
-                '/')[-1] not in cached_problems]
-
-        failed_requests = self.handle_batch_requests(links)
-        if len(failed_requests) > 0:
-            self.handle_batch_requests(failed_requests)
+    def build_contest_url(self):
+        return 'https://codechef.com/%s' % self.contest
 
 
-class Spoj:
+class Spoj(Platform):
     """
     Class to handle downloading of test cases from Spoj
     """
 
     def __init__(self, args):
-        self.site = args['site']
-        self.contest = args['contest']
         self.problem = args['problem'].upper()
-        self.force_download = args['force']
+        super(Spoj, self).__init__(args)
 
     def parse_html(self, req):
         """
@@ -764,30 +740,19 @@ class Spoj:
 
         return formatted_inputs, formatted_outputs
 
-    def scrape_problem(self):
-        """
-        Method to scrape a single problem from spoj
-        """
-        print('Fetching problem ' + self.problem + ' from SPOJ...')
-        url = 'http://spoj.com/problems/' + self.problem
-        req = Utilities.get_html(url)
-        inputs, outputs = self.parse_html(req)
-        Utilities.store_files(self.site, self.contest,
-                              self.problem, inputs, outputs)
-        print('Done.')
+    def build_problem_url(self):
+        return 'http://spoj.com/problems/%s' % self.problem
 
 
-class Hackerrank:
+class Hackerrank(Platform):
     """
     Class to handle downloading of test cases from Hackerrank
     """
 
     def __init__(self, args):
-        self.site = args['site']
-        self.contest = args['contest']
         self.problem = '-'.join(args['problem'].split()
                                 ).lower() if args['problem'] is not None else None
-        self.force_download = args['force']
+        super(Hackerrank, self).__init__(args)
 
     def parse_html(self, req):
         """
@@ -864,72 +829,21 @@ class Hackerrank:
 
         return links
 
-    def handle_batch_requests(self, links):
-        """
-        Method to send simultaneous requests to
-        all problem pages
-        """
-        rs = (grq.get(link) for link in links)
-        responses = grq.map(rs)
+    def build_problem_url(self):
+        return 'https://www.hackerrank.com/rest/contests/%s/challenges/%s' % (self.contest, self.problem)
 
-        failed_requests = []
+    def build_contest_url(self):
+        'https://www.hackerrank.com/rest/contests/%s/challenges' % self.contest
 
-        for response in responses:
-            if response is not None and response.status_code == 200:
-                inputs, outputs = self.parse_html(response)
-                self.problem = response.url.split('/')[-1]
-                Utilities.check_cache(self.site, self.contest, self.problem)
-                Utilities.store_files(
-                    self.site, self.contest, self.problem, inputs, outputs)
-            else:
-                failed_requests += [response.url]
 
-        return failed_requests
-
-    def scrape_problem(self):
-        """
-        Method to scrape a single problem from hackerrank
-        """
-        print('Fetching problem ' + self.contest + '-' + self.problem + ' from Hackerrank...')
-        url = 'https://www.hackerrank.com/rest/contests/' + \
-            self.contest + '/challenges/' + self.problem
-        req = Utilities.get_html(url)
-        inputs, outputs = self.parse_html(req)
-        Utilities.store_files(self.site, self.contest,
-                              self.problem, inputs, outputs)
-        print('Done.')
-
-    def scrape_contest(self):
-        """
-        Method to scrape all problems from a given hackerrank contest
-        """
-        print('Checking problems available for contest ' + self.contest + '...')
-        url = 'https://www.hackerrank.com/rest/contests/' + self.contest + '/challenges'
-        req = Utilities.get_html(url)
-        links = self.get_problem_links(req)
-
-        print('Found %d problems..' % (len(links)))
-
-        if not self.force_download:
-            cached_problems = os.listdir(os.path.join(
-                Utilities.cache_dir, self.site, self.contest))
-            links = [link for link in links if link.split(
-                '/')[-1] not in cached_problems]
-
-        failed_requests = self.handle_batch_requests(links)
-        if len(failed_requests) > 0:
-            self.handle_batch_requests(failed_requests)
-
-class AtCoder:
+class AtCoder(Platform):
     """
     Class to handle downloading of test cases from atcoder
     """
 
     def __init__(self, args):
-        self.site = args['site']
-        self.contest = args['contest']
         self.problem = args['problem']
-        self.force_download = args['force']
+        super(AtCoder, self).__init__(args)
 
     def parse_html(self, req):
         """
@@ -986,67 +900,17 @@ class AtCoder:
 
         return links
 
-    def get_problem_name(self, req):
+    def get_problem_name(self, response):
         """
         Method to get the names for the problems
         in a given atcoder contest
         """
-        soup = bs(req.text, 'html.parser')
+        soup = bs(response.text, 'html.parser')
         return soup.find('title').get_text()[0].lower()
 
-    def handle_batch_requests(self, links):
-        """
-        Method to send simultaneous requests to
-        all problem pages
-        """
-        rs = (grq.get(link) for link in links)
-        responses = grq.map(rs)
+    def build_problem_url(self):
+        return 'https://beta.atcoder.jp/contests/%s/tasks/%s' % (self.contest, self.problem)
 
-        failed_requests = []
-
-        for response in responses:
-            if response is not None and response.status_code == 200:
-                inputs, outputs = self.parse_html(response)
-                self.problem = self.get_problem_name(response)
-                Utilities.check_cache(self.site, self.contest, self.problem)
-                Utilities.store_files(
-                    self.site, self.contest, self.problem, inputs, outputs)
-            else:
-                failed_requests += [response.url]
-
-        return failed_requests
-
-    def scrape_problem(self):
-        """
-        Method to scrape a single problem from atcoder
-        """
-        print('Fetching problem ' + self.contest + '-' + self.problem + ' from AtCoder...')
-        url = 'https://beta.atcoder.jp/contests/%s/tasks/%s' % (self.contest, self.problem)
-
-        req = Utilities.get_html(url)
-        inputs, outputs = self.parse_html(req)
-        Utilities.store_files(self.site, self.contest,
-                              self.problem, inputs, outputs)
-        print('Done.')
-
-    def scrape_contest(self):
-        """
-        Method to scrape all problems from a given codeforces contest
-        """
-        print('Checking problems available for contest ' + self.contest + '...')
-        url = 'https://beta.atcoder.jp/contests/%s/tasks/' % self.contest
-        req = Utilities.get_html(url)
-        links = self.get_problem_links(req)
-
-        print('Found %d problems..' % (len(links)))
-
-        if not self.force_download:
-            cached_problems = os.listdir(os.path.join(
-                Utilities.cache_dir, self.site, self.contest))
-            links = [link for link in links if link.split(
-                '/')[-1] not in cached_problems]
-
-        failed_requests = self.handle_batch_requests(links)
-        if len(failed_requests) > 0:
-            self.handle_batch_requests(failed_requests)
+    def build_contest_url(self):
+        return 'https://beta.atcoder.jp/contests/%s/tasks/' % self.contest
 
