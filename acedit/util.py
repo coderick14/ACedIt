@@ -612,50 +612,36 @@ class Codechef(Platform):
         self.problem = args['problem']
         super(Codechef, self).__init__(args)
 
+    def _extract(self, data, marker):
+        data_low = data.lower()
+        extracts = []
+        idx = data_low.find(marker, 0)
+
+        while not idx == -1:
+            start = data_low.find('```', idx)
+            end = data_low.find('```', start + 3)
+            extracts += [data[start + 3:end]]
+            idx = data_low.find(marker, end)
+
+        return [extract.strip() for extract in extracts]
+
     def parse_html(self, req):
         """
         Method to parse the html and get test cases
         from a codechef problem
         """
         try:
-            data = json.loads(req.text)
-            soup = bs(data['body'], 'html.parser')
+            data = str(json.loads(req.text)['body'])
         except (KeyError, ValueError):
             print('Problem not found..')
             Utilities.handle_kbd_interrupt(
                 self.site, self.contest, self.problem)
             sys.exit(0)
 
-        test_cases = soup.findAll('pre')
-        formatted_inputs, formatted_outputs = [], []
+        inputs = self._extract(data, 'example input')
+        outputs = self._extract(data, 'example output')
 
-        input_list = [
-            '<pre>(.|\n)*<b>Input:?</b>:?',
-            '<b>Output:?</b>(.|\n)+</pre>'
-        ]
-
-        output_list = [
-            '<pre>(.|\n)+<b>Output:?</b>:?',
-            '</pre>'
-        ]
-
-        input_regex = re.compile('(%s)' % '|'.join(input_list))
-        output_regex = re.compile('(%s)' % '|'.join(output_list))
-
-        for case in test_cases:
-            inp = input_regex.sub('', str(case))
-            out = output_regex.sub('', str(case))
-
-            inp = re.sub('<[^<]+?>', '', inp)
-            out = re.sub('<[^<]+?>', '', out)
-
-            formatted_inputs += [inp.strip()]
-            formatted_outputs += [out.strip()]
-
-        # print 'Inputs', formatted_inputs
-        # print 'Outputs', formatted_outputs
-
-        return formatted_inputs, formatted_outputs
+        return inputs, outputs
 
     def get_problem_links(self, req):
         """
