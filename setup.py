@@ -22,7 +22,7 @@ setup(
 
     packages=['acedit'],
 
-    version='1.2.0',
+    version='1.2.1',
 
     description='Download and test against sample test cases from any competitive programming website',
 
