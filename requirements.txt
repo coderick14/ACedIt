@@ -4,4 +4,4 @@ chardet==3.0.4
 idna==2.7
 requests==2.20.0
 terminaltables==3.1.0
-urllib3==1.24.3
+urllib3==1.26.5
